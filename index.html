@@ -2,67 +2,92 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alhadiqainvest | Digital Terminal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Alhadiqainvest | HQ Terminal</title>
+    
     <link rel="icon" type="image/png" href="icon.png">
-
-<link rel="apple-touch-icon" href="icon.png">
+    <link rel="apple-touch-icon" href="icon.png">
     <link rel="stylesheet" href="style.css">
-    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    
+    <script src="lightweight-charts.standalone.production.js"></script>
 </head>
 <body>
     <div id="lib-error" style="display:none; position:fixed; top:0; left:0; width:100%; background:red; color:white; text-align:center; z-index:9999; padding:10px; font-weight:bold;">
-    ⚠️ ERROR: No se encontró el archivo 'lightweight-charts.standalone.production.js'. <br>
-    Asegúrate de haberlo subido a GitHub con ese nombre exacto.
+        ⚠️ ERROR: No se encontró el archivo 'lightweight-charts.standalone.production.js'.
     </div>
-    <div class="platform-container">
-        <header id="status-banner" class="neutral">
-            <h1 id="signal-text">INICIANDO SISTEMA...</h1>
-        </header>
 
-        <main class="dashboard">
-            <section class="chart-area" id="main-chart"></section>
+    <div class="dashboard-wrapper">
+        <nav class="sidebar">
+            <div class="brand">
+                <img src="icon.png" alt="Logo" class="main-logo">
+                <span>ALHADIQAINVEST</span>
+            </div>
 
-            <aside class="info-panel">
-                
-                <div class="card selector-card">
-                    <span class="label">SELECCIONAR MERCADO</span>
-                    <select id="asset-selector">
-                        <optgroup label="Criptomonedas">
-                            <option value="BTC" selected>Bitcoin (BTC)</option>
-                            <option value="ETH">Ethereum (ETH)</option>
-                        </optgroup>
-                        <optgroup label="Commodities">
-                            <option value="GOLD">Oro (XAU/USD)</option>
-                        </optgroup>
-                        <optgroup label="Índices USA">
-                            <option value="US30">US30 (Dow Jones)</option>
-                            <option value="SP500">S&P 500</option>
-                        </optgroup>
-                        <optgroup label="Forex (Majors)">
-                            <option value="EURUSD">EUR/USD</option>
-                            <option value="GBPUSD">GBP/USD</option>
-                            <option value="USDJPY">USD/JPY</option>
-                        </optgroup>
-                    </select>
-                </div>
+            <div class="menu-section">
+                <small class="menu-title">NAVEGACIÓN</small>
+                <ul class="nav-links">
+                    <li class="active"><a href="index.html">📈 Terminal Pro</a></li>
+                    <li><a href="#">📊 Análisis (Próximamente)</a></li>
+                    <li><a href="#">📅 Calendario (Próximamente)</a></li>
+                </ul>
+            </div>
 
-                <div class="card">
-                    <span class="label">ACTIVO VISUALIZADO</span>
-                    <span class="value" id="asset-name">BTC/USD</span>
+            <div class="menu-section status-box">
+                <small class="menu-title">ESTADO DEL SISTEMA</small>
+                <div class="status-indicator">
+                    <div class="dot green"></div>
+                    <span>Servidor Online</span>
                 </div>
-                
-                <div class="card">
-                    <span class="label">PRECIO ACTUAL</span>
-                    <span class="value price" id="current-price">Cargando...</span>
-                </div>
-                
-                <div class="card">
-                    <span class="label">FUERZA RSI (14)</span>
-                    <span class="value" id="rsi-value">--</span>
-                </div>
+            </div>
+        </nav>
 
-            </aside>
+        <main class="main-content">
+            <header id="status-banner" class="neutral">
+                <h1 id="signal-text">SINCRONIZANDO MERCADOS...</h1>
+            </header>
+
+            <div class="content-grid">
+                <section class="chart-area" id="main-chart"></section>
+
+                <aside class="info-panel">
+                    <div class="card selector-card">
+                        <span class="label">SELECCIONAR MERCADO</span>
+                        <select id="asset-selector">
+                            <optgroup label="Criptomonedas">
+                                <option value="BTC" selected>Bitcoin (BTC)</option>
+                                <option value="ETH">Ethereum (ETH)</option>
+                            </optgroup>
+                            <optgroup label="Commodities">
+                                <option value="GOLD">Oro (XAU/USD)</option>
+                            </optgroup>
+                            <optgroup label="Índices USA">
+                                <option value="US30">US30 (Dow Jones)</option>
+                                <option value="SP500">S&P 500</option>
+                            </optgroup>
+                            <optgroup label="Forex (Majors)">
+                                <option value="EURUSD">EUR/USD</option>
+                                <option value="GBPUSD">GBP/USD</option>
+                                <option value="USDJPY">USD/JPY</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <div class="card">
+                        <span class="label">ACTIVO VISUALIZADO</span>
+                        <span class="value" id="asset-name">BTC/USD</span>
+                    </div>
+                    
+                    <div class="card">
+                        <span class="label">PRECIO ACTUAL</span>
+                        <span class="value price" id="current-price">Cargando...</span>
+                    </div>
+                    
+                    <div class="card">
+                        <span class="label">FUERZA RSI (14)</span>
+                        <span class="value" id="rsi-value">--</span>
+                    </div>
+                </aside>
+            </div>
         </main>
     </div>
 
