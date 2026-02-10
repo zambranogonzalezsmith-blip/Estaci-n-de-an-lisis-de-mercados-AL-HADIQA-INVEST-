@@ -182,3 +182,29 @@ select#asset-selector {
 
 .info-panel::-webkit-scrollbar { width: 4px; }
 .info-panel::-webkit-scrollbar-thumb { background: #30363d; border-radius: 10px; }
+#btn-diagnostico {
+    width: 100%;
+    padding: 10px;
+    background: #161b22;
+    border: 1px dashed #30363d;
+    color: #58a6ff;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: bold;
+    transition: 0.3s;
+    margin-top: 10px;
+}
+
+#btn-diagnostico:hover {
+    background: #58a6ff1a;
+    border-color: #58a6ff;
+}
+
+.diag-alert {
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    50% { opacity: 0.5; }
+    }
