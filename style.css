@@ -3,71 +3,133 @@
 
 /* --- CONFIGURACIÓN BASE --- */
 body {
-    background-color: #020408;
+    background-color: #010409;
     color: #e6edf3;
     font-family: 'Inter', sans-serif;
     margin: 0;
     padding: 0;
-    overflow: hidden; /* Evita scroll innecesario para parecer App nativa */
+    overflow: hidden;
     -webkit-font-smoothing: antialiased;
 }
 
-.platform-container {
+/* --- NUEVA ESTRUCTURA DASHBOARD WRAPPER --- */
+.dashboard-wrapper {
     display: flex;
-    flex-direction: column;
     height: 100vh;
+    width: 100vw;
 }
 
-/* --- CABECERA Y SEÑALES --- */
+/* SIDEBAR (Barra Lateral Izquierda) */
+.sidebar {
+    width: 240px;
+    background-color: #0d1117;
+    border-right: 1px solid #30363d;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    flex-shrink: 0;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #30363d;
+    margin-bottom: 25px;
+}
+
+.main-logo {
+    width: 35px;
+    height: 35px;
+    border-radius: 6px;
+    object-fit: cover;
+}
+
+.brand span {
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.5px;
+    color: #58a6ff;
+}
+
+/* NAVEGACIÓN EN SIDEBAR */
+.menu-title {
+    color: #8b949e;
+    font-size: 10px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.nav-links {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 30px 0;
+}
+
+.nav-links li { margin-bottom: 8px; }
+
+.nav-links a {
+    text-decoration: none;
+    color: #c9d1d9;
+    padding: 10px 12px;
+    border-radius: 6px;
+    display: block;
+    font-size: 13px;
+    transition: 0.2s ease;
+}
+
+.nav-links li.active a, .nav-links a:hover {
+    background: #161b22;
+    color: #58a6ff;
+}
+
+/* ESTADO DEL SISTEMA EN SIDEBAR */
+.status-box { margin-top: auto; padding-top: 20px; border-top: 1px solid #30363d; }
+.status-indicator { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #8b949e; }
+.dot { width: 8px; height: 8px; border-radius: 50%; }
+.green { background: #39d353; box-shadow: 0 0 8px #39d353; }
+
+/* --- CONTENIDO PRINCIPAL (Derecha) --- */
+.main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background-color: #010409;
+}
+
 header {
     height: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-bottom: 1px solid #30363d;
-    transition: background-color 0.5s ease, box-shadow 0.5s ease;
     text-align: center;
     padding: 0 20px;
-    z-index: 10;
+    transition: 0.5s ease;
 }
 
-header h1 {
-    font-size: 1.1rem;
-    margin: 0;
-    letter-spacing: 1.5px;
-    font-weight: 700;
-    text-transform: uppercase;
-}
+header h1 { font-size: 1rem; margin: 0; letter-spacing: 1px; font-weight: 700; }
 
-/* Estados Dinámicos */
+/* Estados Dinámicos del Banner */
 .neutral { background: #0d1117; color: #8b949e; }
-.buy { 
-    background: linear-gradient(90deg, #064e3b, #10b981); 
-    color: white; 
-    box-shadow: inset 0 -5px 15px rgba(0,0,0,0.2), 0 0 20px rgba(16, 185, 129, 0.3);
-}
-.sell { 
-    background: linear-gradient(90deg, #7f1d1d, #ef4444); 
-    color: white; 
-    box-shadow: inset 0 -5px 15px rgba(0,0,0,0.2), 0 0 20px rgba(239, 68, 68, 0.3);
-}
+.buy { background: linear-gradient(90deg, #064e3b, #10b981); color: white; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2); }
+.sell { background: linear-gradient(90deg, #7f1d1d, #ef4444); color: white; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2); }
 
-/* --- DASHBOARD LAYOUT --- */
-.dashboard {
+/* GRID DE GRÁFICO Y PANEL */
+.content-grid {
     display: grid;
     grid-template-columns: 1fr 300px;
     flex-grow: 1;
     overflow: hidden;
 }
 
-.chart-area {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    background-color: #020408;
-}
+.chart-area { position: relative; width: 100%; height: 100%; }
 
-/* --- PANEL DE INFORMACIÓN --- */
 .info-panel {
     background: #0d1117;
     padding: 20px;
@@ -78,101 +140,45 @@ header h1 {
     overflow-y: auto;
 }
 
+/* TARJETAS */
 .card {
     background: #161b22;
     padding: 16px;
     border-radius: 8px;
     border: 1px solid #30363d;
-    transition: transform 0.2s ease;
 }
 
-.selector-card {
-    border: 1px solid #00bcd4;
-    background: #0d1117;
-}
+.selector-card { border: 1px solid #00bcd4; }
 
-/* Estilo Profesional para el Selector */
 select#asset-selector {
     width: 100%;
-    background-color: #020408;
+    background-color: #010409;
     color: #58a6ff;
     border: 1px solid #30363d;
-    padding: 12px;
+    padding: 10px;
     border-radius: 6px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
     outline: none;
     cursor: pointer;
-    appearance: none; /* Elimina estilo nativo */
+    appearance: none;
     margin-top: 8px;
 }
 
-select#asset-selector:hover {
-    border-color: #58a6ff;
+/* TIPOGRAFÍA */
+.label { font-size: 10px; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 5px; display: block; }
+.value { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; color: #f0f6fc; }
+.price { color: #39d353; text-shadow: 0 0 10px rgba(57, 211, 83, 0.2); }
+
+/* --- RESPONSIVE (MÓVIL) --- */
+@media (max-width: 900px) {
+    .sidebar { display: none; } /* Oculta sidebar en móvil para priorizar gráfico */
+    .content-grid { grid-template-columns: 1fr; display: flex; flex-direction: column; }
+    .chart-area { height: 60vh; }
+    .info-panel { height: auto; flex-direction: row; flex-wrap: wrap; border-left: none; border-top: 1px solid #30363d; }
+    .card { flex: 1 1 calc(50% - 10px); }
+    .selector-card { flex: 1 1 100%; }
 }
 
-/* --- TIPOGRAFÍA DE DATOS --- */
-.label { 
-    display: block; 
-    font-size: 10px; 
-    color: #8b949e; 
-    margin-bottom: 6px; 
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-weight: 700;
-}
-
-.value { 
-    font-size: 24px; 
-    font-weight: 700; 
-    font-variant-numeric: tabular-nums;
-    color: #f0f6fc;
-}
-
-.price { 
-    color: #39d353; 
-    text-shadow: 0 0 15px rgba(57, 211, 83, 0.3); 
-}
-
-/* --- MÓVIL (RESPONSIVE) --- */
-@media (max-width: 768px) {
-    .dashboard {
-        grid-template-columns: 1fr;
-        grid-template-rows: 1fr auto;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .chart-area {
-        height: 55vh;
-        min-height: 300px;
-    }
-
-    .info-panel {
-        height: auto;
-        max-height: 45vh;
-        border-left: none;
-        border-top: 1px solid #30363d;
-        flex-direction: row;
-        flex-wrap: wrap;
-        padding: 15px;
-        gap: 10px;
-    }
-
-    .card {
-        flex: 1 1 calc(50% - 10px); /* Dos columnas en móvil */
-        padding: 12px;
-        margin-bottom: 0;
-    }
-    
-    .selector-card {
-        flex: 1 1 100%; /* Selector ocupa todo el ancho */
-    }
-    
-    .value { font-size: 18px; }
-    header h1 { font-size: 0.9rem; }
-}
-
-/* Scrollbar Personalizada para el Panel */
 .info-panel::-webkit-scrollbar { width: 4px; }
 .info-panel::-webkit-scrollbar-thumb { background: #30363d; border-radius: 10px; }
