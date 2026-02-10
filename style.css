@@ -1,0 +1,49 @@
+body {
+    background-color: #020408;
+    color: white;
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    overflow: hidden;
+}
+
+.platform-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+header {
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 2px solid #1a1e26;
+}
+
+.neutral { background: #11141b; }
+.buy { background: #00ff88; color: #000; box-shadow: 0 0 20px #00ff88; }
+.sell { background: #ff3e3e; color: #fff; box-shadow: 0 0 20px #ff3e3e; }
+
+.dashboard {
+    display: grid;
+    grid-template-columns: 3fr 1fr;
+    flex-grow: 1;
+}
+
+.info-panel {
+    background: #0a0d14;
+    padding: 20px;
+    border-left: 1px solid #1a1e26;
+}
+
+.card {
+    background: #161a23;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #2d333f;
+}
+
+.label { display: block; font-size: 10px; color: #808a9d; margin-bottom: 5px; }
+.value { font-size: 20px; font-weight: bold; }
+.price { color: #00ff88; }
