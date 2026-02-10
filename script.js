@@ -2,14 +2,14 @@
 (function checkLibrary() {
     if (typeof LightweightCharts === 'undefined') {
         console.error("La librería de gráficos no se ha cargado.");
-        document.getElementById('lib-error').style.display = 'block';
+        const errBox = document.getElementById('lib-error');
+        if(errBox) errBox.style.display = 'block';
         throw new Error("Sistema detenido: Librería faltante.");
     } else {
-        console.log("✅ Motor de gráficos cargado correctamente.");
+        console.log("✅ Motor ALHADIQAINVEST cargado.");
     }
 })();
 
-// ... (Aquí continúa el resto de tu código script.js que ya tienes)
 // --- CONFIGURACIÓN DE LA PLATAFORMA ---
 const CONFIG = {
     ema_fast: 9,
@@ -31,6 +31,7 @@ const ASSETS = {
 
 let currentAssetKey = 'BTC';
 
+// --- REFERENCIAS HTML ---
 const chartElement = document.getElementById('main-chart');
 const statusBanner = document.getElementById('status-banner');
 const signalText = document.getElementById('signal-text');
@@ -43,9 +44,13 @@ const selector = document.getElementById('asset-selector');
 const chart = LightweightCharts.createChart(chartElement, {
     width: chartElement.offsetWidth,
     height: chartElement.offsetHeight,
-    layout: { background: { type: 'solid', color: '#020408' }, textColor: '#d1d4dc' },
-    grid: { vertLines: { color: '#1a1e26' }, horzLines: { color: '#1a1e26' } },
-    timeScale: { timeVisible: true, secondsVisible: false, borderColor: '#30363d' },
+    layout: { 
+        background: { type: 'solid', color: '#010409' }, 
+        textColor: '#d1d4dc',
+        fontSize: 12
+    },
+    grid: { vertLines: { color: '#161b22' }, horzLines: { color: '#161b22' } },
+    timeScale: { timeVisible: true, borderColor: '#30363d' },
     rightPriceScale: { borderColor: '#30363d' }
 });
 
@@ -55,14 +60,14 @@ const candleSeries = chart.addCandlestickSeries({
     wickUpColor: '#39d353', wickDownColor: '#ff3e3e',
 });
 
-const emaFastSeries = chart.addLineSeries({ color: '#00bcd4', lineWidth: 2, title: 'EMA Rápida' });
-const emaSlowSeries = chart.addLineSeries({ color: '#ffa726', lineWidth: 2, title: 'EMA Lenta' });
+const emaFastSeries = chart.addLineSeries({ color: '#00bcd4', lineWidth: 2 });
+const emaSlowSeries = chart.addLineSeries({ color: '#ffa726', lineWidth: 2 });
 
 // --- GESTOR DE DATOS ---
 async function fetchMarketData() {
     const asset = ASSETS[currentAssetKey];
     assetNameEl.innerText = asset.name || asset.symbol;
-    signalText.innerText = "SINCRONIZANDO MERCADO...";
+    signalText.innerText = "ACTUALIZANDO TERMINAL...";
 
     try {
         let candles = [];
@@ -72,7 +77,11 @@ async function fetchMarketData() {
             candles = await getYahooData(asset.symbol);
         }
 
-        if (!candles || candles.length === 0) throw new Error("Sin datos");
+        if (!candles || candles.length < 2) {
+            signalText.innerText = "MERCADO CERRADO / ESPERANDO DATOS";
+            statusBanner.className = "neutral";
+            return;
+        }
 
         candleSeries.setData(candles);
 
@@ -84,21 +93,23 @@ async function fetchMarketData() {
         emaSlowSeries.setData(emaSlow);
 
         const lastPrice = candles[candles.length - 1].close;
-        const lastRSI = rsiValues[rsiValues.length - 1].value;
+        const lastRSI = rsiValues.length > 0 ? rsiValues[rsiValues.length - 1].value : 50;
         
-        priceEl.innerText = `$${lastPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        // Formateo inteligente de precio
+        const dec = (lastPrice < 10) ? 4 : 2;
+        priceEl.innerText = `$${lastPrice.toLocaleString(undefined, {minimumFractionDigits: dec, maximumFractionDigits: dec})}`;
         rsiEl.innerText = lastRSI.toFixed(2);
 
         updateSignal(emaFast, emaSlow, lastRSI);
 
     } catch (error) {
-        console.error("Error de Red:", error);
-        signalText.innerText = "RECONECTANDO...";
+        console.error("Error:", error);
+        signalText.innerText = "ERROR DE CONEXIÓN CON EL SERVIDOR";
         statusBanner.className = "neutral";
     }
 }
 
-// --- CONECTOR CRYPTO (CoinGecko) ---
+// --- CONECTOR CRYPTO ---
 async function getCryptoData(coinId) {
     const res = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}/ohlc?vs_currency=usd&days=1`);
     const data = await res.json();
@@ -108,24 +119,28 @@ async function getCryptoData(coinId) {
     }));
 }
 
-// --- CONECTOR YAHOO (Proxy AllOrigins) ---
+// --- CONECTOR YAHOO ---
 async function getYahooData(symbol) {
     const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=15m&range=2d`;
     const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(yahooUrl)}`;
 
-    const res = await fetch(proxyUrl);
-    const json = await res.json();
-    const result = json.chart.result[0];
-    const quote = result.indicators.quote[0];
-    const ts = result.timestamp;
+    try {
+        const res = await fetch(proxyUrl);
+        const json = await res.json();
+        const result = json.chart.result[0];
+        const quote = result.indicators.quote[0];
+        const ts = result.timestamp;
 
-    return ts.map((t, i) => ({
-        time: t,
-        open: quote.open[i], high: quote.high[i], low: quote.low[i], close: quote.close[i]
-    })).filter(c => c.open != null);
+        if(!ts) return [];
+
+        return ts.map((t, i) => ({
+            time: t,
+            open: quote.open[i], high: quote.high[i], low: quote.low[i], close: quote.close[i]
+        })).filter(c => c.open != null);
+    } catch (e) { return []; }
 }
 
-// --- CÁLCULOS MATEMÁTICOS ---
+// --- CÁLCULOS ---
 function calculateEMA(data, period) {
     let k = 2 / (period + 1);
     let emaArray = [];
@@ -139,13 +154,13 @@ function calculateEMA(data, period) {
 
 function calculateRSI(data, period) {
     let rsiArray = [];
+    if (data.length <= period) return rsiArray;
+    
     let gains = 0, losses = 0;
-
     for (let i = 1; i <= period; i++) {
         let diff = data[i].close - data[i - 1].close;
         if (diff >= 0) gains += diff; else losses -= diff;
     }
-
     let avgGain = gains / period;
     let avgLoss = losses / period;
 
@@ -153,31 +168,29 @@ function calculateRSI(data, period) {
         let diff = data[i].close - data[i - 1].close;
         let gain = diff >= 0 ? diff : 0;
         let loss = diff < 0 ? -diff : 0;
-
         avgGain = (avgGain * (period - 1) + gain) / period;
         avgLoss = (avgLoss * (period - 1) + loss) / period;
-
         let rs = avgGain / avgLoss;
-        let rsi = 100 - (100 / (1 + rs));
-        rsiArray.push({ time: data[i].time, value: rsi });
+        rsiArray.push({ time: data[i].time, value: 100 - (100 / (1 + rs)) });
     }
     return rsiArray;
 }
 
 // --- LÓGICA DE SEÑAL ---
 function updateSignal(emaFData, emaSData, rsi) {
+    if(emaFData.length < 1 || emaSData.length < 1) return;
     const lastF = emaFData[emaFData.length - 1].value;
     const lastS = emaSData[emaSData.length - 1].value;
 
     if (lastF > lastS && rsi < 70) {
         statusBanner.className = 'buy';
-        signalText.innerText = `🟢 COMPRAR ${currentAssetKey}`;
+        signalText.innerText = `🟢 OPORTUNIDAD DE COMPRA EN ${currentAssetKey}`;
     } else if (lastF < lastS && rsi > 30) {
         statusBanner.className = 'sell';
-        signalText.innerText = `🔴 VENDER ${currentAssetKey}`;
+        signalText.innerText = `🔴 OPORTUNIDAD DE VENTA EN ${currentAssetKey}`;
     } else {
         statusBanner.className = 'neutral';
-        signalText.innerText = `⚪ MERCADO NEUTRAL (${currentAssetKey})`;
+        signalText.innerText = `⚪ MERCADO EN RANGO / NEUTRAL (${currentAssetKey})`;
     }
 }
 
