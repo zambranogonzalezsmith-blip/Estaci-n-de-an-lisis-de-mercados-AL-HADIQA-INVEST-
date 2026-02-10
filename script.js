@@ -1,4 +1,4 @@
-// --- SISTEMA DE AUTO-RECUPERACIÓN ALHADIQA ---
+// --- SISTEMA DE AUTO-RECUPERACIÓN ---
 (function checkLibrary() {
     if (typeof LightweightCharts === 'undefined') {
         const backupScript = document.createElement('script');
@@ -10,24 +10,14 @@
     }
 })();
 
-// --- CONFIGURACIÓN Y ESTADOS ---
-const CONFIG = { ema_fast: 9, ema_slow: 21, rsi_period: 14, update_ms: 60000 };
-const ASSETS = {
-    'BTC': { type: 'crypto', id: 'bitcoin', symbol: 'BTC-USD', name: 'Bitcoin' },
-    'ETH': { type: 'crypto', id: 'ethereum', symbol: 'ETH-USD', name: 'Ethereum' },
-    'GOLD': { type: 'yahoo', symbol: 'GC=F', name: 'Oro (Futures)' },
-    'US30': { type: 'yahoo', symbol: '^DJI', name: 'Dow Jones 30' },
-    'SP500': { type: 'yahoo', symbol: '^GSPC', name: 'S&P 500' },
-    'EURUSD': { type: 'yahoo', symbol: 'EURUSD=X', name: 'EUR/USD' },
-    'GBPUSD': { type: 'yahoo', symbol: 'GBPUSD=X', name: 'GBP/USD' },
-    'USDJPY': { type: 'yahoo', symbol: 'USDJPY=X', name: 'USD/JPY' }
-};
-
+// --- CONFIGURACIÓN GLOBAL ---
+let CONFIG = { ema_fast: 9, ema_slow: 21, rsi_period: 14, update_ms: 30000 };
 let currentAssetKey = 'BTC';
-let terminalMode = 'normal'; // 'normal' o 'smc'
+let currentTimeframe = '15m'; 
+let terminalMode = 'normal';
 let chart, candleSeries, emaFastSeries, emaSlowSeries;
 
-// --- INICIALIZACIÓN ---
+// --- INICIALIZACIÓN DEL MOTOR ---
 function initTerminal() {
     const chartElement = document.getElementById('main-chart');
     if (!chartElement) return;
@@ -37,20 +27,27 @@ function initTerminal() {
         height: chartElement.offsetHeight,
         layout: { background: { type: 'solid', color: '#010409' }, textColor: '#d1d4dc', fontSize: 12 },
         grid: { vertLines: { color: '#161b22' }, horzLines: { color: '#161b22' } },
-        timeScale: { timeVisible: true, borderColor: '#30363d' },
-        rightPriceScale: { borderColor: '#30363d' }
+        // --- MEJORA DE MOVIMIENTO TIPO TRADINGVIEW ---
+        handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: true },
+        handleScale: { axisPressedMouseMove: true, mouseWheel: true, pinch: true },
+        timeScale: { timeVisible: true, borderColor: '#30363d', rightOffset: 10, barSpacing: 8 },
+        crosshair: { mode: LightweightCharts.CrosshairMode.Normal }
     });
 
     candleSeries = chart.addCandlestickSeries({
         upColor: '#39d353', downColor: '#ff3e3e',
-        borderUpColor: '#39d353', borderDownColor: '#ff3e3e',
-        wickUpColor: '#39d353', wickDownColor: '#ff3e3e',
+        borderVisible: false, wickUpColor: '#39d353', wickDownColor: '#ff3e3e',
     });
 
     emaFastSeries = chart.addLineSeries({ color: '#00bcd4', lineWidth: 2 });
     emaSlowSeries = chart.addLineSeries({ color: '#ffa726', lineWidth: 2 });
 
-    // Escuchador para el botón del menú
+    // Eventos
+    document.getElementById('asset-selector').addEventListener('change', (e) => {
+        currentAssetKey = e.target.value;
+        fetchMarketData();
+    });
+
     document.getElementById('nav-forex-smc')?.addEventListener('click', (e) => {
         e.preventDefault();
         activarModoSMC();
@@ -58,89 +55,90 @@ function initTerminal() {
 
     fetchMarketData();
     setInterval(fetchMarketData, CONFIG.update_ms);
+
+    window.addEventListener('resize', () => {
+        chart.applyOptions({ width: chartElement.offsetWidth, height: chartElement.offsetHeight });
+    });
 }
 
-// --- CAMBIO DE MODO DINÁMICO ---
-function activarModoSMC() {
-    terminalMode = 'smc';
-    document.querySelectorAll('.nav-links li').forEach(li => li.classList.remove('active'));
-    document.getElementById('nav-forex-smc').parentElement.classList.add('active');
-    
-    // UI Changes
-    document.getElementById('smc-info-card').style.display = 'block';
-    emaFastSeries.applyOptions({ visible: false });
-    emaSlowSeries.applyOptions({ visible: false });
-    
-    alert("SISTEMA ALHADIQA: Modo SMC Pro Activado. Analizando huella institucional...");
+// --- GESTIÓN DE TIEMPO Y MODO ---
+function cambiarTF(tf) {
+    currentTimeframe = tf;
+    document.querySelectorAll('.tf-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if(btn.innerText.toLowerCase() === tf) btn.classList.add('active');
+    });
     fetchMarketData();
 }
 
-// --- GESTOR DE DATOS ---
+function activarModoSMC() {
+    terminalMode = 'smc';
+    document.getElementById('smc-info-card').style.display = 'block';
+    emaFastSeries.applyOptions({ visible: false });
+    emaSlowSeries.applyOptions({ visible: false });
+    fetchMarketData();
+}
+
+// --- OBTENCIÓN DE DATOS ---
 async function fetchMarketData() {
+    const ASSETS = {
+        'BTC': { type: 'crypto', id: 'bitcoin', symbol: 'BTC-USD', name: 'Bitcoin' },
+        'ETH': { type: 'crypto', id: 'ethereum', symbol: 'ETH-USD', name: 'Ethereum' },
+        'GOLD': { type: 'yahoo', symbol: 'GC=F', name: 'Oro' },
+        'US30': { type: 'yahoo', symbol: '^DJI', name: 'US30' },
+        'EURUSD': { type: 'yahoo', symbol: 'EURUSD=X', name: 'EUR/USD' },
+        'GBPUSD': { type: 'yahoo', symbol: 'GBPUSD=X', name: 'GBP/USD' },
+        'USDJPY': { type: 'yahoo', symbol: 'USDJPY=X', name: 'USD/JPY' }
+    };
+
     const asset = ASSETS[currentAssetKey];
     document.getElementById('asset-name').innerText = asset.name;
 
     try {
-        let candles = (asset.type === 'crypto') ? await getCryptoData(asset.id) : await getYahooData(asset.symbol);
-        if (!candles || candles.length < 2) return;
-
-        candleSeries.setData(candles);
-        
-        const rsiV = calculateRSI(candles, CONFIG.rsi_period);
-        const lastRSI = rsiV.length > 0 ? rsiV[rsiV.length - 1].value : 50;
-        const lastPrice = candles[candles.length - 1].close;
-
-        document.getElementById('current-price').innerText = `$${lastPrice.toLocaleString()}`;
-        document.getElementById('rsi-value').innerText = lastRSI.toFixed(2);
-
-        if (terminalMode === 'normal') {
-            const emaF = calculateEMA(candles, CONFIG.ema_fast);
-            const emaS = calculateEMA(candles, CONFIG.ema_slow);
-            emaFastSeries.setData(emaF);
-            emaSlowSeries.setData(emaS);
-            updateSignal(emaF, emaS, lastRSI);
+        let candles = [];
+        if (asset.type === 'crypto') {
+            const r = await fetch(`https://api.coingecko.com/api/v3/coins/${asset.id}/ohlc?vs_currency=usd&days=1`);
+            const d = await r.json();
+            candles = d.map(x => ({ time: x[0]/1000, open: x[1], high: x[2], low: x[3], close: x[4] }));
         } else {
-            const estructura = detectarEstructuraSMC(candles);
-            document.getElementById('smc-status').innerText = estructura;
-            document.getElementById('signal-text').innerText = `MODO SMC: ${estructura}`;
+            const u = `https://query1.finance.yahoo.com/v8/finance/chart/${asset.symbol}?interval=${currentTimeframe}&range=2d`;
+            const p = `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`;
+            const r = await fetch(p);
+            const j = await r.json();
+            const res = j.chart.result[0];
+            candles = res.timestamp.map((t, i) => ({
+                time: t, open: res.indicators.quote[0].open[i], high: res.indicators.quote[0].high[i],
+                low: res.indicators.quote[0].low[i], close: res.indicators.quote[0].close[i]
+            })).filter(c => c.open != null);
         }
-    } catch (e) { console.error("Error de red"); }
+
+        if (candles.length > 0) {
+            candleSeries.setData(candles);
+            procesarIndicadores(candles);
+        }
+    } catch (e) { console.error("Error en plataforma:", e); }
 }
 
-// --- MOTOR SMC (Lógica de LuxAlgo base) ---
-function detectarEstructuraSMC(candles) {
-    if (candles.length < 20) return "Cargando Historial...";
-    
-    let altos = [], bajos = [];
-    for (let i = 2; i < candles.length - 2; i++) {
-        if (candles[i].high > candles[i-1].high && candles[i].high > candles[i+1].high) altos.push(candles[i].high);
-        if (candles[i].low < candles[i-1].low && candles[i].low < candles[i+1].low) bajos.push(candles[i].low);
+// --- LÓGICA DE INDICADORES ---
+function procesarIndicadores(candles) {
+    const rsiV = calculateRSI(candles, CONFIG.rsi_period);
+    const lastRSI = rsiV.length > 0 ? rsiV[rsiV.length - 1].value : 50;
+    const lastPrice = candles[candles.length - 1].close;
+
+    document.getElementById('current-price').innerText = `$${lastPrice.toLocaleString()}`;
+    document.getElementById('rsi-value').innerText = lastRSI.toFixed(2);
+
+    if (terminalMode === 'normal') {
+        const emaF = calculateEMA(candles, CONFIG.ema_fast);
+        const emaS = calculateEMA(candles, CONFIG.ema_slow);
+        emaFastSeries.setData(emaF);
+        emaSlowSeries.setData(emaS);
+        actualizarBanner(emaF, emaS, lastRSI);
+    } else {
+        const estructura = detectarSMC(candles);
+        document.getElementById('smc-status').innerText = estructura;
+        document.getElementById('signal-text').innerText = `MODO SMC: ${estructura}`;
     }
-
-    const current = candles[candles.length - 1].close;
-    const lastHigh = altos[altos.length - 1];
-    const lastLow = bajos[bajos.length - 1];
-
-    if (current > lastHigh) return "BOS ALCISTA 🚀";
-    if (current < lastLow) return "BOS BAJISTA 📉";
-    return "Consolidación (IDM)";
-}
-
-// --- CONECTORES ---
-async function getCryptoData(id) {
-    const r = await fetch(`https://api.coingecko.com/api/v3/coins/${id}/ohlc?vs_currency=usd&days=1`);
-    return (await r.json()).map(d => ({ time: d[0]/1000, open: d[1], high: d[2], low: d[3], close: d[4] }));
-}
-
-async function getYahooData(s) {
-    const u = `https://query1.finance.yahoo.com/v8/finance/chart/${s}?interval=15m&range=2d`;
-    const r = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`);
-    const j = await r.json();
-    const res = j.chart.result[0];
-    return res.timestamp.map((t, i) => ({
-        time: t, open: res.indicators.quote[0].open[i], high: res.indicators.quote[0].high[i],
-        low: res.indicators.quote[0].low[i], close: res.indicators.quote[0].close[i]
-    })).filter(c => c.open != null);
 }
 
 // --- MATEMÁTICAS ---
@@ -170,41 +168,30 @@ function calculateRSI(data, p) {
     return rsiArr;
 }
 
-function updateSignal(f, s, r) {
+function detectarSMC(candles) {
+    if (candles.length < 10) return "Analizando...";
+    const last = candles[candles.length - 1];
+    const prev = candles[candles.length - 5];
+    if (last.close > prev.high) return "BOS ALCISTA 🚀";
+    if (last.close < prev.low) return "BOS BAJISTA 📉";
+    return "CONSOLIDACIÓN";
+}
+
+function actualizarBanner(f, s, r) {
     const banner = document.getElementById('status-banner');
     const txt = document.getElementById('signal-text');
     const lF = f[f.length-1].value, lS = s[s.length-1].value;
+    if (lF > lS && r < 70) { banner.className = 'buy'; txt.innerText = "🟢 COMPRA SUGERIDA"; }
+    else if (lF < lS && r > 30) { banner.className = 'sell'; txt.innerText = "🔴 VENTA SUGERIDA"; }
+    else { banner.className = 'neutral'; txt.innerText = "⚪ ESPERANDO SEÑAL"; }
+}
 
-    if (lF > lS && r < 70) { banner.className = 'buy'; txt.innerText = `🟢 COMPRA: ${currentAssetKey}`; }
-    else if (lF < lS && r > 30) { banner.className = 'sell'; txt.innerText = `🔴 VENTA: ${currentAssetKey}`; }
-    else { banner.className = 'neutral'; txt.innerText = `⚪ NEUTRAL: ${currentAssetKey}`; }
+function actualizarParametros() {
+    CONFIG.ema_fast = parseInt(document.getElementById('input-ema-fast').value);
+    CONFIG.ema_slow = parseInt(document.getElementById('input-ema-slow').value);
+    CONFIG.rsi_period = parseInt(document.getElementById('input-rsi').value);
 }
 
 function ejecutarDiagnostico() {
-    let msg = (typeof LightweightCharts !== 'undefined') ? "✅ Motor OK" : "❌ Error de Motor";
-    alert("DIAGNÓSTICO ALHADIQA:\n" + msg);
+    alert(`ALHADIQA OK\nActivo: ${currentAssetKey}\nTF: ${currentTimeframe}\nModo: ${terminalMode}`);
 }
-
-document.getElementById('asset-selector').addEventListener('change', (e) => {
-    currentAssetKey = e.target.value;
-    fetchMarketData();
-});
-let currentTimeframe = '15m'; // Default
-
-function cambiarTF(tf) {
-    currentTimeframe = tf;
-    
-    // Actualizar apariencia de botones
-    document.querySelectorAll('.tf-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if(btn.innerText === tf.toUpperCase()) btn.classList.add('active');
-    });
-
-    console.log(`⏱️ Cambiando temporalidad a: ${tf}`);
-    
-    // Forzar recarga de datos
-    fetchMarketData();
-}
-
-// Modificación necesaria en tu función getYahooData:
-// Asegúrate de que la URL use la variable: ...interval=${currentTimeframe}...
