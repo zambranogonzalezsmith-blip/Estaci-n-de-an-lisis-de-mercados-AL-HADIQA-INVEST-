@@ -208,3 +208,41 @@ select#asset-selector {
 @keyframes blink {
     50% { opacity: 0.5; }
     }
+.settings-card {
+    background: #0d1117 !important;
+    border: 1px solid #30363d !important;
+}
+
+.setting-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 8px 0;
+}
+
+.setting-group label {
+    font-size: 11px;
+    color: #8b949e;
+}
+
+.setting-group input {
+    width: 50px;
+    background: #161b22;
+    border: 1px solid #30363d;
+    color: #58a6ff;
+    border-radius: 4px;
+    padding: 2px 5px;
+    text-align: center;
+}
+
+.btn-save {
+    width: 100%;
+    margin-top: 10px;
+    background: #238636;
+    color: white;
+    border: none;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
