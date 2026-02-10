@@ -7,7 +7,6 @@
     
     <link rel="icon" type="image/jpeg" href="icon.jpg">
     <link rel="apple-touch-icon" href="icon.jpg">
-    
     <link rel="stylesheet" href="style.css">
     
     <script src="chart-lib.js"></script>
@@ -29,43 +28,47 @@
                 <ul class="nav-links">
                     <li class="active"><a href="index.html">📈 Terminal Pro</a></li>
                     <li><a href="#" id="nav-forex-smc">💱 Forex SMC Pro</a></li>
-                    <li><a href="https://www.investing.com/economic-calendar/" target="_blank">📅 Calendario Económico</a></li>
+                    <li><a href="https://www.investing.com/economic-calendar/" target="_blank">📅 Calendario</a></li>
                 </ul>
             </div>
 
             <div class="menu-section status-box">
                 <small class="menu-title">SISTEMA</small>
-                <div class="menu-section diag-box">
+                <div class="diag-box">
                     <button id="btn-diagnostico" onclick="ejecutarDiagnostico()">
-                        🔍 Diagnosticar Sistema
+                        🔍 Diagnosticar
                     </button>
                 </div>
                 <div class="status-indicator">
                     <div class="dot green"></div>
-                    <span>Servidor Online</span>
+                    <span>Online</span>
                 </div>
             </div>
         </nav>
 
         <main class="main-content">
             <header id="status-banner" class="neutral">
-                <h1 id="signal-text">CONECTANDO CON EL MERCADO...</h1>
+                <h1 id="signal-text">CONECTANDO...</h1>
             </header>
 
             <div class="content-grid">
                 <section class="chart-area" id="main-chart"></section>
 
-                <div class="card selector-card">
-    <span class="label">TEMPORALIDAD (PERIOD)</span>
-    <div class="timeframe-grid">
-        <button class="tf-btn" onclick="cambiarTF('1m')">1M</button>
-        <button class="tf-btn" onclick="cambiarTF('5m')">5M</button>
-        <button class="tf-btn active" onclick="cambiarTF('15m')">15M</button>
-        <button class="tf-btn" onclick="cambiarTF('1h')">1H</button>
-        <button class="tf-btn" onclick="cambiarTF('1d')">1D</button>
-    </div>
-                </div>
-                        <span class="label">SELECCIONAR MERCADO</span>
+                <aside class="info-panel">
+                    
+                    <div class="card selector-card">
+                        <span class="label">TEMPORALIDAD</span>
+                        <div class="timeframe-grid">
+                            <button class="tf-btn" onclick="cambiarTF('1m')">1M</button>
+                            <button class="tf-btn" onclick="cambiarTF('5m')">5M</button>
+                            <button class="tf-btn active" onclick="cambiarTF('15m')">15M</button>
+                            <button class="tf-btn" onclick="cambiarTF('1h')">1H</button>
+                            <button class="tf-btn" onclick="cambiarTF('1d')">1D</button>
+                        </div>
+                    </div>
+
+                    <div class="card selector-card">
+                        <span class="label">MERCADO</span>
                         <select id="asset-selector">
                             <optgroup label="Criptomonedas">
                                 <option value="BTC" selected>Bitcoin (BTC)</option>
@@ -74,7 +77,7 @@
                             <optgroup label="Commodities">
                                 <option value="GOLD">Oro (XAU/USD)</option>
                             </optgroup>
-                            <optgroup label="Índices USA">
+                            <optgroup label="Índices">
                                 <option value="US30">US30 (Dow Jones)</option>
                                 <option value="SP500">S&P 500</option>
                             </optgroup>
@@ -87,42 +90,35 @@
                     </div>
 
                     <div class="card">
-                        <span class="label">ACTIVO</span>
-                        <span class="value" id="asset-name">BTC/USD</span>
+                        <span class="label" id="asset-name">BITCOIN</span>
+                        <span class="value price" id="current-price">$0.00</span>
                     </div>
-                   <div class="card settings-card">
-    <span class="label">⚙️ AJUSTES DE INDICADORES</span>
-    
-    <div class="setting-group">
-        <label>EMA Rápida:</label>
-        <input type="number" id="input-ema-fast" value="9" onchange="actualizarParametros()">
-    </div>
-    
-    <div class="setting-group">
-        <label>EMA Lenta:</label>
-        <input type="number" id="input-ema-slow" value="21" onchange="actualizarParametros()">
-    </div>
-    
-    <div class="setting-group">
-        <label>Periodo RSI:</label>
-        <input type="number" id="input-rsi" value="14" onchange="actualizarParametros()">
-    </div>
-    
-    <button class="btn-save" onclick="fetchMarketData()">Aplicar Cambios</button>
-                   </div> 
-                    <div class="card">
-                        <span class="label">PRECIO EN VIVO</span>
-                        <span class="value price" id="current-price">0.00</span>
-                    </div>
-                    
+
                     <div class="card" id="smc-info-card" style="border-left: 4px solid #58a6ff; display: none;">
                         <span class="label">ESTRUCTURA SMC</span>
-                        <span class="value" id="smc-status" style="font-size: 0.9em;">Analizando...</span>
+                        <span class="value" id="smc-status">Analizando...</span>
                     </div>
 
                     <div class="card">
                         <span class="label">RSI (14)</span>
                         <span class="value" id="rsi-value">--</span>
+                    </div>
+
+                    <div class="card settings-card">
+                        <span class="label">⚙️ CONFIGURACIÓN</span>
+                        <div class="setting-group">
+                            <label>EMA Fast:</label>
+                            <input type="number" id="input-ema-fast" value="9" onchange="actualizarParametros()">
+                        </div>
+                        <div class="setting-group">
+                            <label>EMA Slow:</label>
+                            <input type="number" id="input-ema-slow" value="21" onchange="actualizarParametros()">
+                        </div>
+                        <div class="setting-group">
+                            <label>RSI:</label>
+                            <input type="number" id="input-rsi" value="14" onchange="actualizarParametros()">
+                        </div>
+                        <button class="btn-save" onclick="fetchMarketData()">APLICAR</button>
                     </div>
                 </aside>
             </div>
