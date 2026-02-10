@@ -82,7 +82,26 @@
                         <span class="label">ACTIVO</span>
                         <span class="value" id="asset-name">BTC/USD</span>
                     </div>
-                    
+                   <div class="card settings-card">
+    <span class="label">⚙️ AJUSTES DE INDICADORES</span>
+    
+    <div class="setting-group">
+        <label>EMA Rápida:</label>
+        <input type="number" id="input-ema-fast" value="9" onchange="actualizarParametros()">
+    </div>
+    
+    <div class="setting-group">
+        <label>EMA Lenta:</label>
+        <input type="number" id="input-ema-slow" value="21" onchange="actualizarParametros()">
+    </div>
+    
+    <div class="setting-group">
+        <label>Periodo RSI:</label>
+        <input type="number" id="input-rsi" value="14" onchange="actualizarParametros()">
+    </div>
+    
+    <button class="btn-save" onclick="fetchMarketData()">Aplicar Cambios</button>
+                   </div> 
                     <div class="card">
                         <span class="label">PRECIO EN VIVO</span>
                         <span class="value price" id="current-price">0.00</span>
