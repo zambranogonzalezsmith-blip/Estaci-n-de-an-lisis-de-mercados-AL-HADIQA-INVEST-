@@ -10,11 +10,11 @@
     
     <link rel="stylesheet" href="style.css">
     
-    <script src="lightweight-charts.standalone.production.js"></script>
+    <script src="chart-lib.js"></script>
 </head>
 <body>
     <div id="lib-error" style="display:none; position:fixed; top:0; left:0; width:100%; background:red; color:white; text-align:center; z-index:9999; padding:10px; font-weight:bold;">
-        ⚠️ ERROR: No se cargó el motor de gráficos. Verifica el nombre del archivo .js
+        ⚠️ ERROR: No se cargó el motor de gráficos (chart-lib.js).
     </div>
 
     <div class="dashboard-wrapper">
@@ -28,17 +28,17 @@
                 <small class="menu-title">NAVEGACIÓN</small>
                 <ul class="nav-links">
                     <li class="active"><a href="index.html">📈 Terminal Pro</a></li>
-                    <li><a href="#">📊 Análisis Técnico</a></li>
-                    <li><a href="#">📅 Calendario</a></li>
+                    <li><a href="#" id="nav-forex-smc">💱 Forex SMC Pro</a></li>
+                    <li><a href="https://www.investing.com/economic-calendar/" target="_blank">📅 Calendario Económico</a></li>
                 </ul>
             </div>
 
             <div class="menu-section status-box">
-                <small class="menu-title">CONEXIÓN</small>
+                <small class="menu-title">SISTEMA</small>
                 <div class="menu-section diag-box">
-    <button id="btn-diagnostico" onclick="ejecutarDiagnostico()">
-        🔍 Diagnosticar Sistema
-    </button>
+                    <button id="btn-diagnostico" onclick="ejecutarDiagnostico()">
+                        🔍 Diagnosticar Sistema
+                    </button>
                 </div>
                 <div class="status-indicator">
                     <div class="dot green"></div>
@@ -88,6 +88,11 @@
                         <span class="value price" id="current-price">0.00</span>
                     </div>
                     
+                    <div class="card" id="smc-info-card" style="border-left: 4px solid #58a6ff; display: none;">
+                        <span class="label">ESTRUCTURA SMC</span>
+                        <span class="value" id="smc-status" style="font-size: 0.9em;">Analizando...</span>
+                    </div>
+
                     <div class="card">
                         <span class="label">RSI (14)</span>
                         <span class="value" id="rsi-value">--</span>
