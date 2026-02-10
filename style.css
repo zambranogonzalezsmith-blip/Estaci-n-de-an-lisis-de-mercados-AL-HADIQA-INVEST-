@@ -1,161 +1,178 @@
 /* Importar fuente moderna tipo interfaz */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
 
+/* --- CONFIGURACIÓN BASE --- */
 body {
     background-color: #020408;
     color: #e6edf3;
     font-family: 'Inter', sans-serif;
     margin: 0;
-    overflow: hidden; /* Evita scroll en la pantalla principal */
+    padding: 0;
+    overflow: hidden; /* Evita scroll innecesario para parecer App nativa */
+    -webkit-font-smoothing: antialiased;
 }
 
-/* Contenedor Principal */
 .platform-container {
     display: flex;
     flex-direction: column;
     height: 100vh;
 }
 
-/* Banner Superior de Estado */
+/* --- CABECERA Y SEÑALES --- */
 header {
     height: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-bottom: 1px solid #30363d;
-    transition: all 0.3s ease;
+    transition: background-color 0.5s ease, box-shadow 0.5s ease;
     text-align: center;
     padding: 0 20px;
+    z-index: 10;
 }
 
 header h1 {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     margin: 0;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+    text-transform: uppercase;
 }
 
-/* Estados de la Señal (Colores Neón) */
+/* Estados Dinámicos */
 .neutral { background: #0d1117; color: #8b949e; }
 .buy { 
-    background: linear-gradient(90deg, #004d40, #00c853); 
+    background: linear-gradient(90deg, #064e3b, #10b981); 
     color: white; 
-    box-shadow: 0 4px 15px rgba(0, 200, 83, 0.4);
-    border-bottom: none;
+    box-shadow: inset 0 -5px 15px rgba(0,0,0,0.2), 0 0 20px rgba(16, 185, 129, 0.3);
 }
 .sell { 
-    background: linear-gradient(90deg, #b71c1c, #ff5252); 
+    background: linear-gradient(90deg, #7f1d1d, #ef4444); 
     color: white; 
-    box-shadow: 0 4px 15px rgba(255, 82, 82, 0.4);
-    border-bottom: none;
+    box-shadow: inset 0 -5px 15px rgba(0,0,0,0.2), 0 0 20px rgba(239, 68, 68, 0.3);
 }
 
-/* Layout del Dashboard (Grilla) */
+/* --- DASHBOARD LAYOUT --- */
 .dashboard {
     display: grid;
-    grid-template-columns: 1fr 300px; /* Gráfico ocupa resto, Panel fijo 300px */
+    grid-template-columns: 1fr 300px;
     flex-grow: 1;
     overflow: hidden;
 }
 
-/* Área del Gráfico */
 .chart-area {
     position: relative;
     width: 100%;
     height: 100%;
+    background-color: #020408;
 }
 
-/* Panel Lateral */
+/* --- PANEL DE INFORMACIÓN --- */
 .info-panel {
     background: #0d1117;
     padding: 20px;
     border-left: 1px solid #30363d;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    overflow-y: auto; /* Permite scroll si hay muchas tarjetas */
+    gap: 12px;
+    overflow-y: auto;
 }
 
-/* Tarjetas de Información */
 .card {
     background: #161b22;
-    padding: 15px;
-    border-radius: 6px;
+    padding: 16px;
+    border-radius: 8px;
     border: 1px solid #30363d;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: transform 0.2s ease;
 }
 
 .selector-card {
-    border: 1px solid #00bcd4; /* Borde azul para destacar el selector */
+    border: 1px solid #00bcd4;
+    background: #0d1117;
 }
 
-/* Estilo del Selector (Dropdown) */
+/* Estilo Profesional para el Selector */
 select#asset-selector {
     width: 100%;
-    background-color: #0d1117;
-    color: white;
+    background-color: #020408;
+    color: #58a6ff;
     border: 1px solid #30363d;
-    padding: 10px;
-    border-radius: 4px;
+    padding: 12px;
+    border-radius: 6px;
     font-size: 14px;
+    font-weight: 700;
     outline: none;
     cursor: pointer;
-    font-family: 'Inter', sans-serif;
-    margin-top: 5px;
+    appearance: none; /* Elimina estilo nativo */
+    margin-top: 8px;
 }
 
-select#asset-selector:focus {
+select#asset-selector:hover {
     border-color: #58a6ff;
 }
 
-/* Tipografía de las Tarjetas */
+/* --- TIPOGRAFÍA DE DATOS --- */
 .label { 
     display: block; 
-    font-size: 11px; 
+    font-size: 10px; 
     color: #8b949e; 
-    margin-bottom: 5px; 
+    margin-bottom: 6px; 
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
+    font-weight: 700;
 }
 
 .value { 
-    font-size: 22px; 
+    font-size: 24px; 
     font-weight: 700; 
-    font-variant-numeric: tabular-nums; /* Alinea los números */
+    font-variant-numeric: tabular-nums;
+    color: #f0f6fc;
 }
 
-.price { color: #00ff88; text-shadow: 0 0 10px rgba(0, 255, 136, 0.2); }
+.price { 
+    color: #39d353; 
+    text-shadow: 0 0 15px rgba(57, 211, 83, 0.3); 
+}
 
-/* --- RESPONSIVE (MÓVIL) --- */
+/* --- MÓVIL (RESPONSIVE) --- */
 @media (max-width: 768px) {
     .dashboard {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr auto;
         display: flex;
-        flex-direction: column; /* Apila uno sobre otro */
+        flex-direction: column;
     }
 
     .chart-area {
-        height: 60vh; /* El gráfico ocupa el 60% de la pantalla */
+        height: 55vh;
+        min-height: 300px;
     }
 
     .info-panel {
-        height: 40vh; /* El panel ocupa el 40% restante */
+        height: auto;
+        max-height: 45vh;
         border-left: none;
-        border-top: 2px solid #30363d;
-        padding: 15px;
-        flex-direction: row; /* En móvil, las tarjetas se ponen de lado */
+        border-top: 1px solid #30363d;
+        flex-direction: row;
         flex-wrap: wrap;
-        align-content: flex-start;
-        justify-content: space-between;
+        padding: 15px;
+        gap: 10px;
     }
 
     .card {
-        width: 45%; /* Las tarjetas ocupan casi la mitad cada una */
+        flex: 1 1 calc(50% - 10px); /* Dos columnas en móvil */
+        padding: 12px;
         margin-bottom: 0;
     }
     
     .selector-card {
-        width: 100%; /* El selector ocupa todo el ancho */
-        margin-bottom: 10px;
+        flex: 1 1 100%; /* Selector ocupa todo el ancho */
     }
     
     .value { font-size: 18px; }
+    header h1 { font-size: 0.9rem; }
 }
+
+/* Scrollbar Personalizada para el Panel */
+.info-panel::-webkit-scrollbar { width: 4px; }
+.info-panel::-webkit-scrollbar-thumb { background: #30363d; border-radius: 10px; }
