@@ -1,23 +1,23 @@
-// --- TEST DE SEGURIDAD DE LIBRERÍA ---
+// --- SISTEMA DE AUTO-RECUPERACIÓN ALHADIQA ---
 (function checkLibrary() {
     if (typeof LightweightCharts === 'undefined') {
-        console.error("La librería de gráficos no se ha cargado.");
-        const errBox = document.getElementById('lib-error');
-        if(errBox) errBox.style.display = 'block';
-        throw new Error("Sistema detenido: Librería faltante.");
+        console.warn("⚠️ Motor local no encontrado. Activando protocolo de emergencia...");
+        const backupScript = document.createElement('script');
+        // Esto carga la librería desde internet si tu archivo local falla
+        backupScript.src = "https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js";
+        backupScript.onload = () => {
+            console.log("✅ Motor de emergencia conectado. Iniciando terminal...");
+            initTerminal(); 
+        };
+        document.head.appendChild(backupScript);
     } else {
-        console.log("✅ Motor ALHADIQAINVEST cargado.");
+        console.log("✅ Motor ALHADIQAINVEST cargado desde chart-lib.js");
+        window.onload = initTerminal;
     }
 })();
 
-// --- CONFIGURACIÓN DE LA PLATAFORMA ---
-const CONFIG = {
-    ema_fast: 9,
-    ema_slow: 21,
-    rsi_period: 14,
-    update_ms: 60000 
-};
-
+// --- CONFIGURACIÓN ---
+const CONFIG = { ema_fast: 9, ema_slow: 21, rsi_period: 14, update_ms: 60000 };
 const ASSETS = {
     'BTC': { type: 'crypto', id: 'bitcoin', symbol: 'BTC-USD', name: 'Bitcoin' },
     'ETH': { type: 'crypto', id: 'ethereum', symbol: 'ETH-USD', name: 'Ethereum' },
@@ -30,216 +30,134 @@ const ASSETS = {
 };
 
 let currentAssetKey = 'BTC';
+let chart, candleSeries, emaFastSeries, emaSlowSeries;
 
-// --- REFERENCIAS HTML ---
-const chartElement = document.getElementById('main-chart');
-const statusBanner = document.getElementById('status-banner');
-const signalText = document.getElementById('signal-text');
-const assetNameEl = document.getElementById('asset-name');
-const priceEl = document.getElementById('current-price');
-const rsiEl = document.getElementById('rsi-value');
-const selector = document.getElementById('asset-selector');
+// --- INICIALIZACIÓN DE LA TERMINAL ---
+function initTerminal() {
+    const chartElement = document.getElementById('main-chart');
+    if (!chartElement) return;
 
-// --- INICIAR GRÁFICO ---
-const chart = LightweightCharts.createChart(chartElement, {
-    width: chartElement.offsetWidth,
-    height: chartElement.offsetHeight,
-    layout: { 
-        background: { type: 'solid', color: '#010409' }, 
-        textColor: '#d1d4dc',
-        fontSize: 12
-    },
-    grid: { vertLines: { color: '#161b22' }, horzLines: { color: '#161b22' } },
-    timeScale: { timeVisible: true, borderColor: '#30363d' },
-    rightPriceScale: { borderColor: '#30363d' }
-});
+    chart = LightweightCharts.createChart(chartElement, {
+        width: chartElement.offsetWidth,
+        height: chartElement.offsetHeight,
+        layout: { background: { type: 'solid', color: '#010409' }, textColor: '#d1d4dc', fontSize: 12 },
+        grid: { vertLines: { color: '#161b22' }, horzLines: { color: '#161b22' } },
+        timeScale: { timeVisible: true, borderColor: '#30363d' },
+        rightPriceScale: { borderColor: '#30363d' }
+    });
 
-const candleSeries = chart.addCandlestickSeries({
-    upColor: '#39d353', downColor: '#ff3e3e',
-    borderUpColor: '#39d353', borderDownColor: '#ff3e3e',
-    wickUpColor: '#39d353', wickDownColor: '#ff3e3e',
-});
+    candleSeries = chart.addCandlestickSeries({
+        upColor: '#39d353', downColor: '#ff3e3e',
+        borderUpColor: '#39d353', borderDownColor: '#ff3e3e',
+        wickUpColor: '#39d353', wickDownColor: '#ff3e3e',
+    });
 
-const emaFastSeries = chart.addLineSeries({ color: '#00bcd4', lineWidth: 2 });
-const emaSlowSeries = chart.addLineSeries({ color: '#ffa726', lineWidth: 2 });
+    emaFastSeries = chart.addLineSeries({ color: '#00bcd4', lineWidth: 2 });
+    emaSlowSeries = chart.addLineSeries({ color: '#ffa726', lineWidth: 2 });
 
-// --- GESTOR DE DATOS ---
+    fetchMarketData();
+    setInterval(fetchMarketData, CONFIG.update_ms);
+
+    window.addEventListener('resize', () => {
+        chart.applyOptions({ width: chartElement.offsetWidth, height: chartElement.offsetHeight });
+    });
+}
+
+// --- GESTOR DE DATOS Y SEÑALES ---
 async function fetchMarketData() {
     const asset = ASSETS[currentAssetKey];
-    assetNameEl.innerText = asset.name || asset.symbol;
-    signalText.innerText = "ACTUALIZANDO TERMINAL...";
+    document.getElementById('asset-name').innerText = asset.name;
+    document.getElementById('signal-text').innerText = "ACTUALIZANDO...";
 
     try {
-        let candles = [];
-        if (asset.type === 'crypto') {
-            candles = await getCryptoData(asset.id);
-        } else if (asset.type === 'yahoo') {
-            candles = await getYahooData(asset.symbol);
-        }
+        let candles = (asset.type === 'crypto') ? await getCryptoData(asset.id) : await getYahooData(asset.symbol);
 
-        if (!candles || candles.length < 2) {
-            signalText.innerText = "MERCADO CERRADO / ESPERANDO DATOS";
-            statusBanner.className = "neutral";
-            return;
-        }
+        if (!candles || candles.length < 2) throw new Error("Mercado cerrado");
 
         candleSeries.setData(candles);
+        const emaF = calculateEMA(candles, CONFIG.ema_fast);
+        const emaS = calculateEMA(candles, CONFIG.ema_slow);
+        const rsiV = calculateRSI(candles, CONFIG.rsi_period);
 
-        const emaFast = calculateEMA(candles, CONFIG.ema_fast);
-        const emaSlow = calculateEMA(candles, CONFIG.ema_slow);
-        const rsiValues = calculateRSI(candles, CONFIG.rsi_period);
-
-        emaFastSeries.setData(emaFast);
-        emaSlowSeries.setData(emaSlow);
+        emaFastSeries.setData(emaF);
+        emaSlowSeries.setData(emaS);
 
         const lastPrice = candles[candles.length - 1].close;
-        const lastRSI = rsiValues.length > 0 ? rsiValues[rsiValues.length - 1].value : 50;
+        const lastRSI = rsiV.length > 0 ? rsiV[rsiV.length - 1].value : 50;
         
-        // Formateo inteligente de precio
-        const dec = (lastPrice < 10) ? 4 : 2;
-        priceEl.innerText = `$${lastPrice.toLocaleString(undefined, {minimumFractionDigits: dec, maximumFractionDigits: dec})}`;
-        rsiEl.innerText = lastRSI.toFixed(2);
+        document.getElementById('current-price').innerText = `$${lastPrice.toLocaleString()}`;
+        document.getElementById('rsi-value').innerText = lastRSI.toFixed(2);
 
-        updateSignal(emaFast, emaSlow, lastRSI);
-
-    } catch (error) {
-        console.error("Error:", error);
-        signalText.innerText = "ERROR DE CONEXIÓN CON EL SERVIDOR";
-        statusBanner.className = "neutral";
+        updateSignal(emaF, emaS, lastRSI);
+    } catch (e) {
+        document.getElementById('signal-text').innerText = "SIN DATOS / MERCADO PAUSADO";
     }
 }
 
-// --- CONECTOR CRYPTO ---
-async function getCryptoData(coinId) {
-    const res = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}/ohlc?vs_currency=usd&days=1`);
-    const data = await res.json();
-    return data.map(d => ({
-        time: d[0] / 1000,
-        open: d[1], high: d[2], low: d[3], close: d[4]
-    }));
+// --- CONECTORES (Iguales a los anteriores pero con manejo de errores) ---
+async function getCryptoData(id) {
+    const r = await fetch(`https://api.coingecko.com/api/v3/coins/${id}/ohlc?vs_currency=usd&days=1`);
+    return (await r.json()).map(d => ({ time: d[0]/1000, open: d[1], high: d[2], low: d[3], close: d[4] }));
 }
 
-// --- CONECTOR YAHOO ---
-async function getYahooData(symbol) {
-    const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=15m&range=2d`;
-    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(yahooUrl)}`;
-
-    try {
-        const res = await fetch(proxyUrl);
-        const json = await res.json();
-        const result = json.chart.result[0];
-        const quote = result.indicators.quote[0];
-        const ts = result.timestamp;
-
-        if(!ts) return [];
-
-        return ts.map((t, i) => ({
-            time: t,
-            open: quote.open[i], high: quote.high[i], low: quote.low[i], close: quote.close[i]
-        })).filter(c => c.open != null);
-    } catch (e) { return []; }
+async function getYahooData(s) {
+    const u = `https://query1.finance.yahoo.com/v8/finance/chart/${s}?interval=15m&range=2d`;
+    const p = `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`;
+    const r = await fetch(p);
+    const j = await r.json();
+    const res = j.chart.result[0];
+    return res.timestamp.map((t, i) => ({
+        time: t, open: res.indicators.quote[0].open[i], high: res.indicators.quote[0].high[i],
+        low: res.indicators.quote[0].low[i], close: res.indicators.quote[0].close[i]
+    })).filter(c => c.open != null);
 }
 
-// --- CÁLCULOS ---
-function calculateEMA(data, period) {
-    let k = 2 / (period + 1);
-    let emaArray = [];
-    let ema = data[0].close;
-    for (let i = 0; i < data.length; i++) {
-        ema = (data[i].close * k) + (ema * (1 - k));
-        if (i >= period) emaArray.push({ time: data[i].time, value: ema });
+// --- MATEMÁTICAS ---
+function calculateEMA(data, p) {
+    let k = 2/(p+1), emaArr = [], ema = data[0].close;
+    data.forEach((d, i) => {
+        ema = (d.close * k) + (ema * (1-k));
+        if (i >= p) emaArr.push({ time: d.time, value: ema });
+    });
+    return emaArr;
+}
+
+function calculateRSI(data, p) {
+    let rsiArr = [];
+    if (data.length <= p) return rsiArr;
+    let g = 0, l = 0;
+    for (let i=1; i<=p; i++) {
+        let diff = data[i].close - data[i-1].close;
+        diff >= 0 ? g += diff : l -= diff;
     }
-    return emaArray;
+    let avgG = g/p, avgL = l/p;
+    for (let i=p+1; i<data.length; i++) {
+        let diff = data[i].close - data[i-1].close;
+        avgG = (avgG*(p-1) + (diff>0?diff:0))/p;
+        avgL = (avgL*(p-1) + (diff<0?-diff:0))/p;
+        rsiArr.push({ time: data[i].time, value: 100 - (100/(1 + avgG/avgL)) });
+    }
+    return rsiArr;
 }
 
-function calculateRSI(data, period) {
-    let rsiArray = [];
-    if (data.length <= period) return rsiArray;
-    
-    let gains = 0, losses = 0;
-    for (let i = 1; i <= period; i++) {
-        let diff = data[i].close - data[i - 1].close;
-        if (diff >= 0) gains += diff; else losses -= diff;
-    }
-    let avgGain = gains / period;
-    let avgLoss = losses / period;
+function updateSignal(f, s, r) {
+    const banner = document.getElementById('status-banner');
+    const txt = document.getElementById('signal-text');
+    const lF = f[f.length-1].value, lS = s[s.length-1].value;
 
-    for (let i = period + 1; i < data.length; i++) {
-        let diff = data[i].close - data[i - 1].close;
-        let gain = diff >= 0 ? diff : 0;
-        let loss = diff < 0 ? -diff : 0;
-        avgGain = (avgGain * (period - 1) + gain) / period;
-        avgLoss = (avgLoss * (period - 1) + loss) / period;
-        let rs = avgGain / avgLoss;
-        rsiArray.push({ time: data[i].time, value: 100 - (100 / (1 + rs)) });
-    }
-    return rsiArray;
+    if (lF > lS && r < 70) { banner.className = 'buy'; txt.innerText = `🟢 COMPRA: ${currentAssetKey}`; }
+    else if (lF < lS && r > 30) { banner.className = 'sell'; txt.innerText = `🔴 VENTA: ${currentAssetKey}`; }
+    else { banner.className = 'neutral'; txt.innerText = `⚪ NEUTRAL: ${currentAssetKey}`; }
 }
 
-// --- LÓGICA DE SEÑAL ---
-function updateSignal(emaFData, emaSData, rsi) {
-    if(emaFData.length < 1 || emaSData.length < 1) return;
-    const lastF = emaFData[emaFData.length - 1].value;
-    const lastS = emaSData[emaSData.length - 1].value;
-
-    if (lastF > lastS && rsi < 70) {
-        statusBanner.className = 'buy';
-        signalText.innerText = `🟢 OPORTUNIDAD DE COMPRA EN ${currentAssetKey}`;
-    } else if (lastF < lastS && rsi > 30) {
-        statusBanner.className = 'sell';
-        signalText.innerText = `🔴 OPORTUNIDAD DE VENTA EN ${currentAssetKey}`;
-    } else {
-        statusBanner.className = 'neutral';
-        signalText.innerText = `⚪ MERCADO EN RANGO / NEUTRAL (${currentAssetKey})`;
-    }
-}
-
-// --- EVENTOS ---
-selector.addEventListener('change', (e) => {
+// --- EVENTOS Y DIAGNÓSTICO ---
+document.getElementById('asset-selector').addEventListener('change', (e) => {
     currentAssetKey = e.target.value;
     fetchMarketData();
 });
 
-window.addEventListener('resize', () => {
-    chart.applyOptions({ width: chartElement.offsetWidth, height: chartElement.offsetHeight });
-});
-
-fetchMarketData();
-setInterval(fetchMarketData, CONFIG.update_ms);
 function ejecutarDiagnostico() {
-    console.log("--- INICIANDO AUTO-DIAGNÓSTICO ---");
-    let errores = [];
-    
-    // 1. Revisar Librería de Gráficos
-    if (typeof LightweightCharts === 'undefined') {
-        errores.push("❌ MOTOR DE GRÁFICOS: No cargado. Revisa el nombre del archivo .js en GitHub.");
-    } else {
-        console.log("✅ Motor OK");
-    }
-
-    // 2. Revisar Archivos vinculados
-    if (!document.styleSheets.length) {
-        errores.push("❌ CSS: No se detectan estilos.");
-    }
-
-    // 3. Revisar Imagen del Logo
-    const logo = document.querySelector('.main-logo');
-    if (!logo || logo.naturalWidth === 0) {
-        errores.push("⚠️ LOGO: La imagen icon.jpg no se encuentra o está dañada.");
-    }
-
-    // Resultado
-    if (errores.length > 0) {
-        alert("INFORME TÉCNICO ALHADIQA:\n\n" + errores.join("\n"));
-        // Intento de reparación de emergencia
-        if (typeof LightweightCharts === 'undefined') {
-            console.warn("Intentando conexión de respaldo vía CDN...");
-            const backupScript = document.createElement('script');
-            backupScript.src = "https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js";
-            document.head.appendChild(backupScript);
-            alert("He intentado conectar un motor de respaldo. Por favor, recarga la página en 5 segundos.");
-        }
-    } else {
-        alert("✅ SISTEMA ÓPTIMO: Todos los archivos están conectados correctamente.");
-    }
+    let msg = (typeof LightweightCharts !== 'undefined') ? "✅ Motor OK" : "❌ Error de Motor";
+    msg += (document.querySelector('.main-logo').naturalWidth > 0) ? "\n✅ Logo OK" : "\n⚠️ Logo no encontrado";
+    alert("DIAGNÓSTICO ALHADIQA:\n" + msg);
 }
