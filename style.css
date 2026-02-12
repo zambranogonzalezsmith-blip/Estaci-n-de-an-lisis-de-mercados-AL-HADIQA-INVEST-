@@ -1,30 +1,31 @@
-/* --- KALI FINANCIAL TERMINAL THEME --- */
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600&display=swap');
+/* --- ALHADIQA INSTITUTIONAL TERMINAL THEME --- */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600&display=swap');
 
 :root {
-    --bg-main: #0a0b10;          /* Kali Deep Black */
-    --bg-sidebar: #0f111a;      /* Navy Blue Dark */
-    --bg-card: #161925;
-    --border: #1f2335;
-    --accent: #1fd1ed;          /* Kali Cyan */
-    --gold: #d29922;            /* Institutional Gold */
+    --bg-main: #050608;          /* Ultra Deep Black */
+    --bg-sidebar: #0a0c12;       /* Slate Dark */
+    --bg-card: rgba(22, 25, 37, 0.7); /* Transparencia institucional */
+    --border: rgba(31, 209, 237, 0.15);
+    --accent: #1fd1ed;           /* Kali Cyan */
+    --gold: #d29922;             /* Gold Leaf */
     --success: #00ff9d;
     --danger: #ff4a4a;
-    --text-dim: #7982a9;
+    --text-main: #e2e8f0;
+    --text-dim: #64748b;
 }
 
-* { box-sizing: border-box; outline: none; }
+* { box-sizing: border-box; outline: none; transition: all 0.2s ease-in-out; }
 
 body {
     background-color: var(--bg-main);
-    color: #c0caf5;
+    color: var(--text-main);
     font-family: 'Inter', sans-serif;
     margin: 0; padding: 0;
     height: 100vh; width: 100vw;
     overflow: hidden;
 }
 
-/* --- ESTRUCTURA DE ALTO RENDIMIENTO --- */
+/* --- ESTRUCTURA MASTER --- */
 .dashboard-wrapper {
     display: flex;
     height: 100vh; width: 100vw;
@@ -36,47 +37,48 @@ body {
     border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
-    padding: 15px;
-    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 20px;
     z-index: 1000;
 }
 
 .menu-collapsed .sidebar { transform: translateX(-100%); position: absolute; }
 
-/* BRANDING KALI-STYLE */
+/* BRANDING & LOGO FIX */
 .brand {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px;
-    background: rgba(31, 209, 237, 0.05);
-    border-radius: 8px;
-    margin-bottom: 25px;
-    border: 1px solid rgba(31, 209, 237, 0.1);
+    gap: 14px;
+    padding: 12px;
+    background: linear-gradient(135deg, rgba(31, 209, 237, 0.08) 0%, transparent 100%);
+    border-radius: 6px;
+    margin-bottom: 30px;
+    border-left: 3px solid var(--gold);
 }
 
 .main-logo {
-    width: 38px; height: 38px;
+    width: 42px; height: 42px;
     border-radius: 4px;
-    filter: grayscale(20%) contrast(110%);
+    filter: contrast(1.1);
+    border: 1px solid rgba(210, 153, 34, 0.3);
 }
 
 .brand-text .name {
     font-family: 'JetBrains Mono', monospace;
     font-weight: 700;
     color: var(--accent);
-    letter-spacing: -1px;
+    font-size: 1.1rem;
+    letter-spacing: -0.5px;
     display: block;
 }
 
 .brand-text .sub {
-    font-size: 9px;
+    font-size: 8px;
     color: var(--gold);
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 2.5px;
 }
 
-/* GRÁFICA Y CONTENIDO */
+/* MAIN VIEWPORT */
 .main-content {
     flex-grow: 1;
     display: flex;
@@ -86,7 +88,7 @@ body {
 
 .content-grid {
     display: grid;
-    grid-template-columns: 1fr 340px;
+    grid-template-columns: 1fr 320px;
     height: 100%;
 }
 
@@ -94,111 +96,104 @@ body {
     background: #000;
     position: relative;
     border-right: 1px solid var(--border);
+    box-shadow: inset 0 0 50px rgba(0,0,0,1);
 }
 
-/* PANELES TIPO TERMINAL */
+/* PANELES TIPO CRYPTO-EXCHANGE */
 .info-panel {
     background: var(--bg-main);
     padding: 15px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 15px;
 }
 
 .card {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 15px;
-    position: relative;
+    backdrop-filter: blur(12px);
+    border-radius: 8px;
+    padding: 18px;
 }
 
 .kira-panel {
-    border-top: 2px solid var(--gold);
+    border-top: 1px solid var(--gold);
+    background: linear-gradient(to bottom, rgba(210, 153, 34, 0.05), transparent);
 }
 
 .highlight {
     font-family: 'JetBrains Mono', monospace;
     color: var(--accent);
-    font-size: 1.2rem;
+    font-size: 1.3rem;
+    text-shadow: 0 0 10px rgba(31, 209, 237, 0.3);
 }
 
-/* BOTONES MINIMALISTAS */
+/* BOTONES OPERATIVOS */
 .tf-btn {
-    background: #1a1e2e;
+    background: rgba(26, 30, 46, 0.6);
     border: 1px solid var(--border);
     color: var(--text-dim);
-    padding: 5px 10px;
+    padding: 6px 12px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
+    font-size: 10px;
     cursor: pointer;
-    border-radius: 2px;
+    border-radius: 4px;
 }
 
 .tf-btn.active {
     background: var(--accent);
     color: #000;
-    border-color: var(--accent);
+    font-weight: bold;
+    box-shadow: 0 0 15px rgba(31, 209, 237, 0.4);
 }
 
-/* KIRA PAY MODAL (CYBER DESIGN) */
+/* KIRA PAY (MODAL) */
 #crypto-modal {
     display: none; position: fixed;
     top:0; left:0; width:100%; height:100%;
-    background: rgba(5, 5, 10, 0.9);
-    backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.92);
+    backdrop-filter: blur(15px);
     z-index: 2000;
-    justify-content: center; align-items: center;
 }
 
 .payment-card {
-    width: 380px;
-    background: var(--bg-card);
-    border: 1px solid var(--accent);
-    padding: 30px;
-    border-radius: 4px; /* Kali es angular, no redondeado */
+    width: 400px;
+    background: #0d0f14;
+    border: 1px solid var(--gold);
+    padding: 40px;
+    border-radius: 2px;
     text-align: center;
-    box-shadow: 0 0 30px rgba(31, 209, 237, 0.1);
-}
-
-.qr-container {
-    background: #fff;
-    padding: 10px;
-    margin: 20px 0;
-    display: inline-block;
 }
 
 .wallet-address-box {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
+    font-size: 11px;
     background: #000;
-    padding: 10px;
-    border: 1px dashed var(--accent);
-    color: var(--accent);
-    cursor: pointer;
-}
-
-.btn-metamask {
-    width: 100%;
-    background: var(--accent);
-    color: #000;
-    border: none;
     padding: 12px;
-    font-weight: 700;
-    font-family: 'JetBrains Mono', monospace;
-    margin-top: 20px;
-    cursor: pointer;
+    border: 1px dashed var(--gold);
+    color: var(--gold);
+    margin: 20px 0;
+    word-break: break-all;
 }
 
+/* MENU TOGGLE FLOATING */
 #menu-toggle {
-    position: fixed; top: 15px; left: 15px;
+    position: fixed; top: 20px; left: 20px;
     z-index: 1001;
-    background: var(--bg-card);
+    background: var(--bg-sidebar);
     border: 1px solid var(--accent);
     color: var(--accent);
-    padding: 6px 12px;
+    padding: 8px 15px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    border-radius: 4px;
-    }
+    font-size: 10px;
+    border-radius: 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+#menu-toggle:hover {
+    background: var(--accent);
+    color: #000;
+    cursor: pointer;
+}
