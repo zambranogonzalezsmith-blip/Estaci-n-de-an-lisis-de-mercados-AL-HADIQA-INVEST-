@@ -186,5 +186,48 @@ body {
     50% { opacity: 0.5; }
     100% { opacity: 1; }
 }
+:root {
+    --bg: #020408; --side: #0a0c12; --accent: #1fd1ed; --gold: #d29922;
+    --success: #00ff9d; --danger: #ff4a4a; --border: rgba(31, 209, 237, 0.1);
+}
 
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: #e2e8f0; font-family: 'JetBrains Mono', monospace; overflow: hidden; }
+
+.terminal-container { display: flex; height: 100vh; width: 100vw; }
+
+/* Sidebar Estilo Bloomberg */
+.sidebar { width: 300px; background: var(--side); border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; }
+
+.session-badge { 
+    display: inline-block; padding: 4px 8px; font-size: 10px; 
+    background: rgba(210, 153, 34, 0.1); color: var(--gold); 
+    border: 1px solid var(--gold); border-radius: 2px; margin-top: 5px;
+}
+
+.progress-bar { height: 4px; background: #1a1e2e; margin-top: 10px; border-radius: 2px; }
+#prob-fill { height: 100%; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+
+/* Emulator Panel */
+.demo-panel { margin-top: auto; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 4px; border: 1px solid var(--border); }
+.stat-item { display: flex; justify-content: space-between; font-size: 11px; margin: 5px 0; }
+.val { color: var(--accent); }
+
+/* Chart Area */
+.chart-viewport { flex: 1; position: relative; }
+#tv_chart_main { height: 100%; width: 100%; }
+
+/* Algo Overlay (El HUD de Kira) */
+.algo-overlay {
+    position: absolute; top: 20px; right: 20px; width: 280px;
+    background: rgba(10, 12, 18, 0.9); border: 1px solid var(--accent);
+    padding: 20px; border-radius: 4px; backdrop-filter: blur(10px); z-index: 10;
+}
+
+.level-box { padding: 8px; margin-top: 10px; font-size: 12px; border-left: 3px solid #ccc; }
+.entry { border-color: var(--accent); background: rgba(31, 209, 237, 0.05); }
+.sl { border-color: var(--danger); background: rgba(255, 74, 74, 0.05); }
+.tp { border-color: var(--success); background: rgba(0, 255, 157, 0.05); }
+
+.neutral { color: #64748b; }
 .scanning { animation: pulse 1.5s infinite; }
