@@ -6,20 +6,22 @@
         backupScript.onload = () => { initTerminal(); };
         document.head.appendChild(backupScript);
     } else {
-        window.onload = initTerminal;
+        if (document.readyState === 'complete') initTerminal();
+        else window.onload = initTerminal;
     }
 })();
 
 // --- CONFIGURACIÓN GLOBAL KIRA 1.0 ---
 let CONFIG = { 
     ema_20: 20, ema_50: 50, ema_80: 80, sma_100: 100, rsi_period: 14,
-    risk_percent: 0.01 // 1% de riesgo por operación
+    risk_percent: 0.01 
 };
 
 let GLOBAL = {
     asset: 'BTC', type: 'crypto', tf: '15m',
     socket: null, interval: null,
-    symbol_map: { 'BTC': 'btcusdt', 'ETH': 'ethusdt' }
+    symbol_map: { 'BTC': 'btcusdt', 'ETH': 'ethusdt' },
+    velas: [] // Almacén de datos para cálculos
 };
 
 let chart, candleSeries, ema20Series, ema50Series, ema80Series, sma100Series;
@@ -37,10 +39,7 @@ function initTerminal() {
         timeScale: { timeVisible: true, borderColor: '#30363d', rightOffset: 5 },
     });
 
-    // Series de Datos (Configuración Visual Sniper)
     candleSeries = chart.addCandlestickSeries({ upColor: '#089981', downColor: '#f23645', borderVisible: false });
-    
-    // Indicadores Kira
     ema20Series = chart.addLineSeries({ color: '#2962ff', lineWidth: 1, title: 'EMA 20' });
     ema50Series = chart.addLineSeries({ color: '#9c27b0', lineWidth: 1, title: 'EMA 50' });
     ema80Series = chart.addLineSeries({ color: '#ff9800', lineWidth: 1, title: 'EMA 80' });
@@ -54,16 +53,19 @@ function initTerminal() {
     });
 }
 
-// --- 2. GESTIÓN DE DATOS EN VIVO ---
+// --- 2. GESTIÓN DE DATOS (HISTORIAL Y SOCKET) ---
 async function cargarActivo() {
     const selector = document.getElementById('asset-selector');
     GLOBAL.asset = selector.value;
-    GLOBAL.type = selector.options[selector.selectedIndex].parentElement.label.includes('CRIPTO') ? 'crypto' : 'forex';
     
-    document.getElementById('asset-name').innerText = GLOBAL.asset;
+    // Corregido: Detección de tipo más robusta
+    const label = selector.options[selector.selectedIndex].parentElement.label || "";
+    GLOBAL.type = label.includes('CRIPTO') ? 'crypto' : 'forex';
     
-    if (GLOBAL.socket) GLOBAL.socket.close();
-    if (GLOBAL.interval) clearInterval(GLOBAL.interval);
+    document.getElementById('asset-name').innerText = selector.options[selector.selectedIndex].text;
+    
+    if (GLOBAL.socket) { GLOBAL.socket.close(); GLOBAL.socket = null; }
+    if (GLOBAL.interval) { clearInterval(GLOBAL.interval); GLOBAL.interval = null; }
 
     await fetchHistoricalData();
 
@@ -74,128 +76,126 @@ async function cargarActivo() {
     }
 }
 
-// --- 3. MOTOR DE ANÁLISIS SMC + KIRA ---
+async function fetchHistoricalData() {
+    try {
+        const symbol = GLOBAL.symbol_map[GLOBAL.asset].toUpperCase();
+        const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${GLOBAL.tf}&limit=300`);
+        const data = await res.json();
+        
+        GLOBAL.velas = data.map(d => ({
+            time: d[0] / 1000,
+            open: parseFloat(d[1]), high: parseFloat(d[2]),
+            low: parseFloat(d[3]), close: parseFloat(d[4])
+        }));
+
+        candleSeries.setData(GLOBAL.velas);
+        actualizarIndicadores(GLOBAL.velas);
+    } catch (e) { console.error("Error historial:", e); }
+}
+
+function iniciarBinanceSocket() {
+    const symbol = GLOBAL.symbol_map[GLOBAL.asset];
+    const wsUrl = `wss://stream.binance.com:9443/ws/${symbol}@kline_${GLOBAL.tf}`;
+    
+    GLOBAL.socket = new WebSocket(wsUrl);
+    GLOBAL.socket.onmessage = (msg) => {
+        const data = JSON.parse(msg.data);
+        const k = data.k;
+        const candle = {
+            time: k.t / 1000,
+            open: parseFloat(k.o), high: parseFloat(k.h),
+            low: parseFloat(k.l), close: parseFloat(k.c)
+        };
+
+        candleSeries.update(candle);
+        document.getElementById('current-price').innerText = `$${candle.close.toFixed(2)}`;
+
+        // Si la vela cierra, actualizamos todo el array de velas para los indicadores
+        if (k.x) {
+            GLOBAL.velas.push(candle);
+            if (GLOBAL.velas.length > 500) GLOBAL.velas.shift();
+            actualizarIndicadores(GLOBAL.velas);
+        }
+    };
+}
+
+// --- 3. MOTOR DE ANÁLISIS ---
 function actualizarIndicadores(candles) {
     if (candles.length < 100) return;
 
-    // A. Cálculos Técnicos
     const e20 = calculateEMA(candles, CONFIG.ema_20);
     const e50 = calculateEMA(candles, CONFIG.ema_50);
     const e80 = calculateEMA(candles, CONFIG.ema_80);
     const s100 = calculateSMA(candles, CONFIG.sma_100);
     const rsi = calculateRSI(candles, CONFIG.rsi_period);
 
-    // B. Actualizar Gráfico
     ema20Series.setData(e20);
     ema50Series.setData(e50);
     ema80Series.setData(e80);
     sma100Series.setData(s100);
 
-    // C. Ejecutar Algoritmo SMC (LuxAlgo Logic)
-    const smcMarkers = SMC_ENGINE.analyze(candles);
-    candleSeries.setMarkers(smcMarkers);
-
-    // D. Detección Sniper de Kira 1.0
-    const lastPrice = candles[candles.length - 1].close;
-    const lastRSI = rsi[rsi.length - 1].value;
-    
-    // UI Updates
-    document.getElementById('rsi-value').innerText = lastRSI.toFixed(2);
-    document.getElementById('rsi-fill').style.width = `${lastRSI}%`;
-    actualizarSesion();
-    
-    // Lógica de Señal
-    ejecutarLogicaKira(lastPrice, e20, e50, e80, s100, smcMarkers);
-}
-
-function ejecutarLogicaKira(price, e20, e50, e80, s100, markers) {
-    const l = e20.length - 1;
-    const actionBox = document.getElementById('kira-signal-box');
-    const actionText = document.getElementById('kira-action');
-    
-    // Condición Sniper: Abanico de EMAs + Precio sobre SMA 100 + Señal SMC
-    const isBullish = e20[l].value > e50[l].value && e50[l].value > e80[l].value && price > s100[l].value;
-    const isBearish = e20[l].value < e50[l].value && e50[l].value < e80[l].value && price < s100[l].value;
-    
-    const lastSMC = markers[markers.length - 1];
-
-    if (isBullish && lastSMC?.text.includes('BUY')) {
-        actionBox.className = 'kira-signal-box kira-buy';
-        actionText.innerText = "🚀 ENTRADA SNIPER: COMPRA";
-        calcularLotaje();
-    } else if (isBearish && lastSMC?.text.includes('SELL')) {
-        actionBox.className = 'kira-signal-box kira-sell';
-        actionText.innerText = "📉 ENTRADA SNIPER: VENTA";
-        calcularLotaje();
-    } else {
-        actionBox.className = 'kira-wait';
-        actionText.innerText = "ESCANEANDO CONFLUENCIA...";
+    // Integración con SMC Engine (asegúrate de que SMC_ENGINE esté definido)
+    if (typeof SMC_ENGINE !== 'undefined') {
+        const smcMarkers = SMC_ENGINE.analyze(candles);
+        candleSeries.setMarkers(smcMarkers);
+        
+        const lastPrice = candles[candles.length - 1].close;
+        const lastRSI = rsi[rsi.length - 1].value;
+        
+        document.getElementById('rsi-value').innerText = lastRSI.toFixed(2);
+        document.getElementById('rsi-fill').style.width = `${lastRSI}%`;
+        actualizarSesion();
+        ejecutarLogicaKira(lastPrice, e20, e50, e80, s100, smcMarkers);
     }
 }
 
-// --- FUNCIONES MATEMÁTICAS ---
-function calculateSMA(data, p) {
-    let smaArr = [];
-    for (let i = p; i <= data.length; i++) {
-        const slice = data.slice(i - p, i);
-        const sum = slice.reduce((a, b) => a + b.close, 0);
-        smaArr.push({ time: data[i-1].time, value: sum / p });
-    }
-    return smaArr;
-}
-
+// --- CORRECCIÓN EN CÁLCULOS MATEMÁTICOS ---
 function calculateEMA(data, p) {
-    let k = 2/(p+1), emaArr = [], ema = data[0].close;
+    let k = 2 / (p + 1);
+    let emaArr = [];
+    let ema = data[0].close;
     data.forEach((d, i) => {
-        ema = (d.close * k) + (ema * (1-k));
+        ema = (d.close * k) + (ema * (1 - k));
         if (i >= p) emaArr.push({ time: d.time, value: ema });
     });
     return emaArr;
 }
 
-function calculateRSI(data, p) {
-    let rsiArr = []; if (data.length <= p) return rsiArr;
-    let g = 0, l = 0;
-    for (let i=1; i<=p; i++) {
-        let diff = data[i].close - data[i-1].close;
-        diff >= 0 ? g += diff : l -= diff;
+function calculateSMA(data, p) {
+    let smaArr = [];
+    for (let i = p; i < data.length; i++) {
+        const slice = data.slice(i - p, i);
+        const sum = slice.reduce((a, b) => a + b.close, 0);
+        smaArr.push({ time: data[i].time, value: sum / p });
     }
-    let avgG = g/p, avgL = l/p;
-    for (let i=p+1; i<data.length; i++) {
-        let diff = data[i].close - data[i-1].close;
-        avgG = (avgG*(p-1) + (diff>0?diff:0))/p;
-        avgL = (avgL*(p-1) + (diff<0?-diff:0))/p;
-        rsiArr.push({ time: data[i].time, value: 100 - (100/(1 + avgG/avgL)) });
+    return smaArr;
+}
+
+function calculateRSI(data, p) {
+    let rsiArr = [];
+    if (data.length <= p) return rsiArr;
+    let gains = 0, losses = 0;
+
+    for (let i = 1; i <= p; i++) {
+        let diff = data[i].close - data[i - 1].close;
+        if (diff >= 0) gains += diff; else losses -= diff;
+    }
+
+    let avgG = gains / p;
+    let avgL = losses / p;
+
+    for (let i = p + 1; i < data.length; i++) {
+        let diff = data[i].close - data[i - 1].close;
+        avgG = (avgG * (p - 1) + (diff > 0 ? diff : 0)) / p;
+        avgL = (avgL * (p - 1) + (diff < 0 ? -diff : 0)) / p;
+        rsiArr.push({ time: data[i].time, value: 100 - (100 / (1 + avgG / avgL)) });
     }
     return rsiArr;
 }
 
-// --- UTILS UI ---
-function actualizarSesion() {
-    const h = new Date().getUTCHours();
-    const b = document.getElementById('session-indicator');
-    const isActive = (h >= 8 && h <= 12) || (h >= 13 && h <= 17);
-    b.innerText = isActive ? "NY/LDN ACTIVE" : "MARKET CLOSED";
-    b.className = isActive ? "session-badge active" : "session-badge";
-}
-
-function calcularLotaje() {
-    const bal = parseFloat(document.getElementById('kira-balance').value) || 1000;
-    const lot = (bal * CONFIG.risk_percent) / 150; // SL estimado de 15 pips
-    document.getElementById('suggested-lot').innerText = Math.max(0.01, lot).toFixed(2);
-}
-
-// Implementación de WebSocket y Fetch (Igual a la anterior pero conectada a actualizarIndicadores)
-async function fetchHistoricalData() {
-    // ... (Tu lógica de fetch previa pero al final llama a:)
-    // actualizarIndicadores(candles);
-}
-
-function iniciarBinanceSocket() {
-    // ... (Tu lógica de socket previa pero en cada tick llama a:)
-    // actualizarIndicadores(todasLasVelas);
-}
-
 function setupEventListeners() {
-    document.getElementById('asset-selector').addEventListener('change', cargarActivo);
-    }
+    const selector = document.getElementById('asset-selector');
+    if (selector) selector.addEventListener('change', cargarActivo);
+}
+
+// El resto de tus funciones UI (actualizarSesion, calcularLotaje) están correctas.
