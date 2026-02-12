@@ -11,13 +11,14 @@
     
     <script src="chart-lib.js"></script>
 </head>
-<body>
-    <div id="lib-error" style="display:none; position:fixed; top:0; left:0; width:100%; background:red; color:white; text-align:center; z-index:9999; padding:10px; font-weight:bold;">
+<body class="menu-collapsed"> <div id="lib-error" style="display:none; position:fixed; top:0; left:0; width:100%; background:red; color:white; text-align:center; z-index:9999; padding:10px; font-weight:bold;">
         ⚠️ ERROR: No se cargó el motor de gráficos (chart-lib.js).
     </div>
 
+    <button id="menu-toggle" onclick="toggleMenu()" title="Abrir Menú">☰</button>
+
     <div class="dashboard-wrapper">
-        <nav class="sidebar">
+        <nav class="sidebar" id="sidebar">
             <div class="brand">
                 <img src="icon.jpg" alt="Logo" class="main-logo" onerror="this.style.display='none'">
                 <span>ALHADIQAINVEST</span>
@@ -35,15 +36,15 @@
             <div class="menu-section status-box">
                 <small class="menu-title">SISTEMA</small>
                 <div class="diag-box">
-                    <button id="btn-diagnostico" onclick="ejecutarDiagnostico()">
-                        🔍 Diagnosticar
-                    </button>
+                    <button id="btn-diagnostico" onclick="ejecutarDiagnostico()">🔍 Diagnosticar</button>
                 </div>
                 <div class="status-indicator">
                     <div class="dot green"></div>
                     <span>Online</span>
                 </div>
             </div>
+            
+            <button class="close-sidebar" onclick="toggleMenu()">Cerrar Panel ×</button>
         </nav>
 
         <main class="main-content">
@@ -56,6 +57,23 @@
 
                 <aside class="info-panel">
                     
+                    <div class="card kira-panel" id="kira-terminal">
+                        <div class="kira-header">
+                            <span class="label">🎯 KIRA 1.0 SNIPER</span>
+                            <div id="session-indicator" class="session-badge">CERRADO</div>
+                        </div>
+                        <div class="kira-stats">
+                            <div class="stat-item"><small>SPREAD</small><span id="kira-spread">--</span></div>
+                            <div class="stat-item"><small>LOTES</small><strong id="suggested-lot">0.01</strong></div>
+                        </div>
+                        <div id="kira-signal-box" class="kira-wait">
+                            <span id="kira-action">ESPERANDO CONFLUENCIA...</span>
+                        </div>
+                        <div class="risk-calculator">
+                            <input type="number" id="kira-balance" value="1000" placeholder="Balance USD" onchange="calcularLotaje()">
+                        </div>
+                    </div>
+
                     <div class="card selector-card">
                         <span class="label">TEMPORALIDAD</span>
                         <div class="timeframe-grid">
@@ -74,22 +92,18 @@
                                 <option value="BTC" selected>Bitcoin (BTC)</option>
                                 <option value="ETH">Ethereum (ETH)</option>
                             </optgroup>
-                            <optgroup label="Commodities">
-                                <option value="GOLD">Oro (XAU/USD)</option>
-                            </optgroup>
-                            <optgroup label="Índices">
-                                <option value="US30">US30 (Dow Jones)</option>
-                                <option value="SP500">S&P 500</option>
-                            </optgroup>
                             <optgroup label="Forex">
                                 <option value="EURUSD">EUR/USD</option>
                                 <option value="GBPUSD">GBP/USD</option>
                                 <option value="USDJPY">USD/JPY</option>
                             </optgroup>
+                            <optgroup label="Commodities">
+                                <option value="GOLD">Oro (XAU/USD)</option>
+                            </optgroup>
                         </select>
                     </div>
 
-                    <div class="card">
+                    <div class="card price-card">
                         <span class="label" id="asset-name">BITCOIN</span>
                         <span class="value price" id="current-price">$0.00</span>
                     </div>
@@ -99,32 +113,36 @@
                         <span class="value" id="smc-status">Analizando...</span>
                     </div>
 
-                    <div class="card">
-                        <span class="label">RSI (14)</span>
-                        <span class="value" id="rsi-value">--</span>
-                    </div>
-
-                    <div class="card settings-card">
-                        <span class="label">⚙️ CONFIGURACIÓN</span>
+                    <details class="card settings-details">
+                        <summary>⚙️ CONFIGURACIÓN TÉCNICA</summary>
                         <div class="setting-group">
                             <label>EMA Fast:</label>
-                            <input type="number" id="input-ema-fast" value="9" onchange="actualizarParametros()">
+                            <input type="number" id="input-ema-fast" value="20" onchange="actualizarParametros()">
+                        </div>
+                        <div class="setting-group">
+                            <label>EMA Mid:</label>
+                            <input type="number" id="input-ema-mid" value="50" onchange="actualizarParametros()">
                         </div>
                         <div class="setting-group">
                             <label>EMA Slow:</label>
-                            <input type="number" id="input-ema-slow" value="21" onchange="actualizarParametros()">
+                            <input type="number" id="input-ema-slow" value="80" onchange="actualizarParametros()">
                         </div>
-                        <div class="setting-group">
-                            <label>RSI:</label>
-                            <input type="number" id="input-rsi" value="14" onchange="actualizarParametros()">
-                        </div>
-                        <button class="btn-save" onclick="fetchMarketData()">APLICAR</button>
-                    </div>
+                        <button class="btn-save" onclick="cargarActivo()">APLICAR</button>
+                    </details>
                 </aside>
             </div>
         </main>
     </div>
 
+    <script>
+        function toggleMenu() {
+            document.body.classList.toggle('menu-collapsed');
+            // Forzar redimensionado de gráfica al abrir/cerrar menú
+            setTimeout(() => { 
+                if(chart) window.dispatchEvent(new Event('resize')); 
+            }, 300);
+        }
+    </script>
     <script src="script.js"></script>
 </body>
 </html>
