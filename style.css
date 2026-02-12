@@ -1,204 +1,101 @@
-/* Importar fuente moderna tipo interfaz */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-
-:root {
-    --bg-main: #010409;
-    --bg-sidebar: #0d1117;
-    --bg-card: #161b22;
-    --border: #30363d;
-    --accent: #58a6ff;
-    --success: #238636;
-    --danger: #f85149;
-    --gold: #d29922;
-}
-
-body {
-    background-color: var(--bg-main);
-    color: #e6edf3;
-    font-family: 'Inter', sans-serif;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    transition: all 0.3s ease;
-}
-
-/* --- ESTRUCTURA DINÁMICA --- */
-.dashboard-wrapper {
-    display: flex;
-    height: 100vh;
-    width: 100vw;
-}
-
-#menu-toggle {
+/* --- ESTILOS KIRA PAY (PASARELA BLOCKCHAIN) --- */
+#crypto-modal {
+    display: none;
     position: fixed;
-    top: 12px;
-    left: 12px;
-    z-index: 1000;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    color: white;
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    display: flex;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(1, 4, 9, 0.85); /* Fondo oscuro semitransparente */
+    backdrop-filter: blur(10px); /* Efecto de desenfoque profesional */
+    z-index: 10000;
+    justify-content: center;
     align-items: center;
-    gap: 8px;
-    font-size: 12px;
+    animation: fadeIn 0.3s ease;
+}
+
+.payment-card {
+    width: 380px;
+    background: #0d1117;
+    border: 1px solid var(--gold);
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 0 40px rgba(210, 153, 34, 0.15);
+    position: relative;
+}
+
+.qr-container {
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    display: inline-block;
+    margin: 20px 0;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+.qr-container img {
+    display: block;
+    width: 180px;
+    height: 180px;
+}
+
+.wallet-address-box {
+    background: #161b22;
+    padding: 12px;
+    border-radius: 8px;
+    font-family: 'monospace';
+    font-size: 11px;
+    color: var(--accent);
+    border: 1px solid var(--border);
+    margin-bottom: 20px;
+    word-break: break-all;
+    cursor: pointer;
     transition: 0.2s;
 }
 
-#menu-toggle:hover { border-color: var(--accent); color: var(--accent); }
-
-/* SIDEBAR RETRÁCTIL */
-.sidebar {
-    width: 260px;
-    background-color: var(--bg-sidebar);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 999;
+.wallet-address-box:hover {
+    border-color: var(--gold);
+    background: #1c2128;
 }
 
-.menu-collapsed .sidebar {
-    transform: translateX(-100%);
-    position: absolute;
-}
-
-.main-content {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    transition: margin-left 0.3s ease;
-}
-
-/* --- PANEL KIRA 1.0 SNIPER --- */
-.kira-panel {
-    background: linear-gradient(145deg, #0d1117 0%, #0d1a2e 100%) !important;
-    border-left: 4px solid var(--gold) !important;
-    position: relative;
-    overflow: hidden;
-}
-
-.kira-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-}
-
-.tag-gold {
-    background: rgba(210, 153, 34, 0.1);
-    color: var(--gold);
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 10px;
-    font-weight: 800;
-    border: 1px solid rgba(210, 153, 34, 0.3);
-}
-
-.kira-data-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-
-.data-box {
-    background: rgba(0,0,0,0.2);
-    padding: 8px;
-    border-radius: 6px;
-    text-align: center;
-    border: 1px solid var(--border);
-}
-
-.highlight { color: var(--accent); font-family: monospace; font-size: 1.1rem; }
-
-/* SEÑAL DINÁMICA KIRA */
-.kira-signal-box {
-    padding: 15px;
-    border-radius: 8px;
-    text-align: center;
-    font-weight: bold;
-    font-size: 12px;
-    border: 1px dashed var(--border);
-    margin: 10px 0;
-    transition: 0.3s;
-}
-
-.kira-wait { color: #8b949e; animation: pulse-border 2s infinite; }
-
-.kira-buy {
-    background: rgba(35, 134, 54, 0.15);
-    border: 1px solid var(--success);
-    color: #39d353;
-    animation: signal-glow-buy 1.5s infinite;
-}
-
-.kira-sell {
-    background: rgba(248, 81, 73, 0.15);
-    border: 1px solid var(--danger);
-    color: #ff7b72;
-    animation: signal-glow-sell 1.5s infinite;
-}
-
-/* --- ÁREA DE GRÁFICO --- */
-.content-grid {
-    display: grid;
-    grid-template-columns: 1fr 320px;
-    flex-grow: 1;
-}
-
-.chart-area {
-    background: var(--bg-main);
+.btn-metamask {
     width: 100%;
-    height: 100%;
+    background: linear-gradient(90deg, #f3ba2f, #d29922);
+    color: #000;
+    border: none;
+    padding: 14px;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: 0.3s ease;
 }
 
-/* RSI VISUAL BAR */
-.rsi-bar {
-    margin-top: 10px;
-    padding-top: 8px;
-    border-top: 1px solid var(--border);
+.btn-metamask:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(210, 153, 34, 0.4);
 }
 
-.rsi-track {
-    height: 4px;
-    background: #30363d;
-    border-radius: 2px;
-    margin-top: 5px;
-    overflow: hidden;
+/* Animación de entrada */
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
 }
 
-#rsi-fill {
-    height: 100%;
-    background: var(--accent);
-    transition: width 0.5s ease;
+/* --- INDICADOR DE CARGA PARA DEPÓSITOS --- */
+.verifying-loader {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--gold);
+    border-bottom-color: transparent;
+    border-radius: 50%;
+    display: inline-block;
+    animation: rotation 1s linear infinite;
+    margin-right: 10px;
 }
 
-/* --- ANIMACIONES --- */
-@keyframes signal-glow-buy {
-    0% { box-shadow: 0 0 0px rgba(57, 211, 83, 0); }
-    50% { box-shadow: 0 0 15px rgba(57, 211, 83, 0.3); }
-    100% { box-shadow: 0 0 0px rgba(57, 211, 83, 0); }
-}
-
-@keyframes signal-glow-sell {
-    0% { box-shadow: 0 0 0px rgba(248, 81, 73, 0); }
-    50% { box-shadow: 0 0 15px rgba(248, 81, 73, 0.3); }
-    100% { box-shadow: 0 0 0px rgba(248, 81, 73, 0); }
-}
-
-@keyframes pulse-border {
-    0% { border-color: var(--border); }
-    50% { border-color: #58a6ff55; }
-    100% { border-color: var(--border); }
-}
-
-/* --- RESPONSIVE --- */
-@media (max-width: 1000px) {
-    .content-grid { grid-template-columns: 1fr; overflow-y: auto; }
-    .info-panel { border-left: none; border-top: 1px solid var(--border); }
-    .chart-area { height: 50vh; min-height: 400px; }
+@keyframes rotation {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
