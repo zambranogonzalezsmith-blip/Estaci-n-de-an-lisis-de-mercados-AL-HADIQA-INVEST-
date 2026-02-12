@@ -291,3 +291,7 @@ select#asset-selector {
 }
 .ny { background: #58a6ff; color: #fff; }
 .london { background: #238636; color: #fff; }
+#menu-toggle { position: fixed; top: 15px; left: 15px; z-index: 1000; background: #21262d; border: 1px solid #30363d; color: white; padding: 10px; border-radius: 5px; cursor: pointer; }
+.sidebar { transition: transform 0.3s ease; transform: translateX(0); }
+.menu-collapsed .sidebar { transform: translateX(-100%); position: absolute; }
+.menu-collapsed .main-content { margin-left: 0; width: 100%; }
