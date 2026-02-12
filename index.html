@@ -11,45 +11,55 @@
     
     <script src="chart-lib.js"></script>
 </head>
-<body class="menu-collapsed"> <div id="lib-error" style="display:none; position:fixed; top:0; left:0; width:100%; background:red; color:white; text-align:center; z-index:9999; padding:10px; font-weight:bold;">
-        ⚠️ ERROR: No se cargó el motor de gráficos (chart-lib.js).
+<body class="menu-collapsed">
+    
+    <div id="lib-error" style="display:none; position:fixed; top:0; left:0; width:100%; background:#f23645; color:white; text-align:center; z-index:9999; padding:12px; font-family: sans-serif;">
+        ⚠️ <strong>ERROR DE CARGA:</strong> Motor de gráficos no detectado. Revise su conexión.
     </div>
 
-    <button id="menu-toggle" onclick="toggleMenu()" title="Abrir Menú">☰</button>
+    <button id="menu-toggle" onclick="toggleMenu()" title="Configuración y Navegación">
+        <span class="icon">☰</span> <small>MENÚ</small>
+    </button>
 
     <div class="dashboard-wrapper">
         <nav class="sidebar" id="sidebar">
             <div class="brand">
                 <img src="icon.jpg" alt="Logo" class="main-logo" onerror="this.style.display='none'">
-                <span>ALHADIQAINVEST</span>
+                <div class="brand-text">
+                    <span class="name">ALHADIQA</span>
+                    <span class="sub">INVEST TERMINAL</span>
+                </div>
             </div>
 
             <div class="menu-section">
-                <small class="menu-title">NAVEGACIÓN</small>
+                <small class="menu-title">OPERATIVA</small>
                 <ul class="nav-links">
-                    <li class="active"><a href="index.html">📈 Terminal Pro</a></li>
-                    <li><a href="#" id="nav-forex-smc">💱 Forex SMC Pro</a></li>
-                    <li><a href="https://www.investing.com/economic-calendar/" target="_blank">📅 Calendario</a></li>
+                    <li class="active"><a href="index.html">📈 Terminal de Trading</a></li>
+                    <li><a href="#" id="nav-forex-smc">🛡️ Estrategia SMC</a></li>
+                    <li><a href="https://www.investing.com/economic-calendar/" target="_blank">📅 Calendario Económico</a></li>
                 </ul>
             </div>
 
-            <div class="menu-section status-box">
-                <small class="menu-title">SISTEMA</small>
-                <div class="diag-box">
-                    <button id="btn-diagnostico" onclick="ejecutarDiagnostico()">🔍 Diagnosticar</button>
-                </div>
+            <div class="menu-section">
+                <small class="menu-title">HERRAMIENTAS KIRA</small>
+                <ul class="nav-links">
+                    <li><a href="#" onclick="ejecutarDiagnostico()">🔍 Test de Latencia</a></li>
+                    <li><a href="#" onclick="alert('Historial de señales en desarrollo')">📜 Registro de Alertas</a></li>
+                </ul>
+            </div>
+
+            <div class="sidebar-footer">
                 <div class="status-indicator">
                     <div class="dot green"></div>
-                    <span>Online</span>
+                    <span>SERVIDOR: ONLINE</span>
                 </div>
+                <button class="close-sidebar" onclick="toggleMenu()">COLAPSAR PANEL ←</button>
             </div>
-            
-            <button class="close-sidebar" onclick="toggleMenu()">Cerrar Panel ×</button>
         </nav>
 
         <main class="main-content">
             <header id="status-banner" class="neutral">
-                <h1 id="signal-text">CONECTANDO...</h1>
+                <div class="signal-badge" id="signal-text">ESPERANDO DATOS...</div>
             </header>
 
             <div class="content-grid">
@@ -58,76 +68,98 @@
                 <aside class="info-panel">
                     
                     <div class="card kira-panel" id="kira-terminal">
-                        <div class="kira-header">
-                            <span class="label">🎯 KIRA 1.0 SNIPER</span>
-                            <div id="session-indicator" class="session-badge">CERRADO</div>
+                        <div class="card-header">
+                            <span class="tag-gold">ALGO KIRA 1.0</span>
+                            <div id="session-indicator" class="session-badge">SUIZA/LONDRES</div>
                         </div>
-                        <div class="kira-stats">
-                            <div class="stat-item"><small>SPREAD</small><span id="kira-spread">--</span></div>
-                            <div class="stat-item"><small>LOTES</small><strong id="suggested-lot">0.01</strong></div>
+                        
+                        <div class="kira-data-grid">
+                            <div class="data-box">
+                                <small>SPREAD</small>
+                                <span id="kira-spread" class="highlight">0.0 pips</span>
+                            </div>
+                            <div class="data-box">
+                                <small>LOTES SNIPER</small>
+                                <strong id="suggested-lot" class="highlight">0.01</strong>
+                            </div>
                         </div>
+
                         <div id="kira-signal-box" class="kira-wait">
-                            <span id="kira-action">ESPERANDO CONFLUENCIA...</span>
+                            <div class="pulse-icon"></div>
+                            <span id="kira-action">ESCANER ACTIVO...</span>
                         </div>
-                        <div class="risk-calculator">
-                            <input type="number" id="kira-balance" value="1000" placeholder="Balance USD" onchange="calcularLotaje()">
-                        </div>
-                    </div>
 
-                    <div class="card selector-card">
-                        <span class="label">TEMPORALIDAD</span>
-                        <div class="timeframe-grid">
-                            <button class="tf-btn" onclick="cambiarTF('1m')">1M</button>
-                            <button class="tf-btn" onclick="cambiarTF('5m')">5M</button>
-                            <button class="tf-btn active" onclick="cambiarTF('15m')">15M</button>
-                            <button class="tf-btn" onclick="cambiarTF('1h')">1H</button>
-                            <button class="tf-btn" onclick="cambiarTF('1d')">1D</button>
+                        <div class="risk-input-group">
+                            <label>BALANCE CUENTA (USD)</label>
+                            <input type="number" id="kira-balance" value="1000" step="100" onchange="calcularLotaje()">
                         </div>
                     </div>
 
                     <div class="card selector-card">
-                        <span class="label">MERCADO</span>
-                        <select id="asset-selector">
-                            <optgroup label="Criptomonedas">
-                                <option value="BTC" selected>Bitcoin (BTC)</option>
-                                <option value="ETH">Ethereum (ETH)</option>
-                            </optgroup>
-                            <optgroup label="Forex">
-                                <option value="EURUSD">EUR/USD</option>
-                                <option value="GBPUSD">GBP/USD</option>
-                                <option value="USDJPY">USD/JPY</option>
-                            </optgroup>
-                            <optgroup label="Commodities">
-                                <option value="GOLD">Oro (XAU/USD)</option>
-                            </optgroup>
-                        </select>
+                        <div class="selector-group">
+                            <label>TEMPORALIDAD</label>
+                            <div class="timeframe-grid">
+                                <button class="tf-btn" onclick="cambiarTF('1m')">1M</button>
+                                <button class="tf-btn" onclick="cambiarTF('5m')">5M</button>
+                                <button class="tf-btn active" onclick="cambiarTF('15m')">15M</button>
+                                <button class="tf-btn" onclick="cambiarTF('1h')">1H</button>
+                            </div>
+                        </div>
+
+                        <div class="selector-group">
+                            <label>ACTIVO SELECCIONADO</label>
+                            <select id="asset-selector" class="dark-select">
+                                <optgroup label="CRIPTO (WEBSOCKET LIVE)">
+                                    <option value="BTC" selected>BITCOIN / USD</option>
+                                    <option value="ETH">ETHEREUM / USD</option>
+                                </optgroup>
+                                <optgroup label="FOREX (HIGH PRECISION)">
+                                    <option value="EURUSD">EUR / USD</option>
+                                    <option value="GBPUSD">GBP / USD</option>
+                                    <option value="USDJPY">USD / JPY</option>
+                                </optgroup>
+                                <optgroup label="METALES">
+                                    <option value="GOLD">XAU / USD (ORO)</option>
+                                </optgroup>
+                            </select>
+                        </div>
                     </div>
 
-                    <div class="card price-card">
-                        <span class="label" id="asset-name">BITCOIN</span>
-                        <span class="value price" id="current-price">$0.00</span>
+                    <div class="card price-display">
+                        <div class="price-info">
+                            <span id="asset-name" class="asset-title">BITCOIN</span>
+                            <span id="current-price" class="price-value">$0.00</span>
+                        </div>
+                        <div class="rsi-bar">
+                            <small>RSI (14): <span id="rsi-value">--</span></small>
+                            <div class="rsi-track"><div id="rsi-fill" style="width: 50%"></div></div>
+                        </div>
                     </div>
 
-                    <div class="card" id="smc-info-card" style="border-left: 4px solid #58a6ff; display: none;">
-                        <span class="label">ESTRUCTURA SMC</span>
-                        <span class="value" id="smc-status">Analizando...</span>
+                    <div class="card smc-card" id="smc-info-card" style="display: none;">
+                        <span class="label">ESTRUCTURA INSTITUCIONAL</span>
+                        <div class="smc-status-box">
+                            <span id="smc-status">BUSCANDO BOS...</span>
+                        </div>
                     </div>
 
                     <details class="card settings-details">
-                        <summary>⚙️ CONFIGURACIÓN TÉCNICA</summary>
-                        <div class="setting-group">
-                            <label>EMA Fast:</label>
-                            <input type="number" id="input-ema-fast" value="20" onchange="actualizarParametros()">
+                        <summary>⚙️ PARÁMETROS DEL ALGORITMO</summary>
+                        <div class="settings-content">
+                            <div class="field">
+                                <label>EMA Rápida (Cruce)</label>
+                                <input type="number" id="input-ema-fast" value="20" onchange="actualizarParametros()">
+                            </div>
+                            <div class="field">
+                                <label>EMA Media (Fuerza)</label>
+                                <input type="number" id="input-ema-mid" value="50" onchange="actualizarParametros()">
+                            </div>
+                            <div class="field">
+                                <label>EMA Lenta (Tendencia)</label>
+                                <input type="number" id="input-ema-slow" value="80" onchange="actualizarParametros()">
+                            </div>
+                            <button class="btn-apply" onclick="cargarActivo()">REINICIAR MOTOR</button>
                         </div>
-                        <div class="setting-group">
-                            <label>EMA Mid:</label>
-                            <input type="number" id="input-ema-mid" value="50" onchange="actualizarParametros()">
-                        </div>
-                        <div class="setting-group">
-                            <label>EMA Slow:</label>
-                            <input type="number" id="input-ema-slow" value="80" onchange="actualizarParametros()">
-                        </div>
-                        <button class="btn-save" onclick="cargarActivo()">APLICAR</button>
                     </details>
                 </aside>
             </div>
@@ -137,9 +169,11 @@
     <script>
         function toggleMenu() {
             document.body.classList.toggle('menu-collapsed');
-            // Forzar redimensionado de gráfica al abrir/cerrar menú
+            // Redimensionar gráfico con retraso para esperar la animación del CSS
             setTimeout(() => { 
-                if(chart) window.dispatchEvent(new Event('resize')); 
+                if(window.chart) {
+                    window.dispatchEvent(new Event('resize'));
+                }
             }, 300);
         }
     </script>
