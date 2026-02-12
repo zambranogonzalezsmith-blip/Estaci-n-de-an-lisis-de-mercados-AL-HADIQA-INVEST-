@@ -3,113 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Alhadiqa Invest | HQ Terminal & Kira Pay</title>
+    <title>ALHADIQA INVEST | TERMINAL v3.1</title>
     
     <link rel="icon" type="image/jpeg" href="icon.jpg">
     <link rel="apple-touch-icon" href="icon.jpg">
     <link rel="stylesheet" href="style.css">
     
-    <script src="chart-lib.js"></script>
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
 </head>
 <body class="menu-collapsed">
     
-    <div id="lib-error" style="display:none; position:fixed; top:0; left:0; width:100%; background:#f23645; color:white; text-align:center; z-index:9999; padding:12px; font-family: sans-serif;">
-        ⚠️ <strong>ERROR DE CARGA:</strong> Motor de gráficos no detectado. Intentando recuperación...
-    </div>
-
-    <button id="menu-toggle" onclick="toggleMenu()" title="Configuración y Navegación">
-        <span class="icon">☰</span> <small>MENÚ</small>
+    <button id="menu-toggle" onclick="toggleMenu()">
+        <span class="icon">☰</span> <small>ROOT@ALHADIQA</small>
     </button>
 
     <div class="dashboard-wrapper">
         <nav class="sidebar" id="sidebar">
             <div class="brand">
-                <img src="icon.jpg" alt="Logo" class="main-logo" onerror="this.style.display='none'">
+                <img src="icon.jpg" alt="Logo" class="main-logo" onerror="this.style.border='1px solid var(--accent)'">
                 <div class="brand-text">
                     <span class="name">ALHADIQA</span>
-                    <span class="sub">INVEST TERMINAL</span>
+                    <span class="sub">INSTITUTIONAL HQ</span>
                 </div>
             </div>
 
             <div class="menu-section">
-                <small class="menu-title">OPERATIVA</small>
+                <small class="menu-title">-- OPERATIVA_CORE</small>
                 <ul class="nav-links">
-                    <li class="active"><a href="index.html">📈 Terminal de Trading</a></li>
-                    <li><a href="#" onclick="abrirPasarela()">💎 Pagar con Crypto</a></li>
-                    <li><a href="https://www.investing.com/economic-calendar/" target="_blank">📅 Calendario Económico</a></li>
+                    <li class="active"><a href="#">📈 TERMINAL_LIVE</a></li>
+                    <li><a href="#" onclick="abrirPasarela()">💎 KIRA_PAY_SECURE</a></li>
+                    <li><a href="https://www.investing.com/economic-calendar/" target="_blank">📅 CALENDARIO_ECON</a></li>
                 </ul>
             </div>
 
             <div class="menu-section">
-                <small class="menu-title">HERRAMIENTAS KIRA</small>
+                <small class="menu-title">-- KIRA_TOOLS</small>
                 <ul class="nav-links">
-                    <li><a href="#" onclick="ejecutarDiagnostico()">🔍 Test de Latencia</a></li>
-                    <li><a href="#" onclick="alert('Historial de señales en desarrollo')">📜 Registro de Alertas</a></li>
+                    <li><a href="#" onclick="ejecutarDiagnostico()">🔍 TEST_LATENCIA</a></li>
+                    <li><a href="#">📜 LOG_ALERTAS</a></li>
                 </ul>
             </div>
 
             <div class="sidebar-footer">
                 <div class="status-indicator">
                     <div class="dot green"></div>
-                    <span>SERVIDOR: ONLINE</span>
+                    <span>SYSTEM: ONLINE</span>
                 </div>
-                <button class="close-sidebar" onclick="toggleMenu()">COLAPSAR PANEL ←</button>
+                <button class="close-sidebar" onclick="toggleMenu()">[ EXIT_PANEL ]</button>
             </div>
         </nav>
 
         <main class="main-content">
             <header id="status-banner" class="neutral">
-                <div class="signal-badge" id="signal-text">ESPERANDO DATOS...</div>
+                <div class="signal-badge" id="signal-text">SCANNING_MARKET...</div>
             </header>
 
             <div class="content-grid">
-                <section class="chart-area" id="main-chart"></section>
+                <section class="chart-area" id="main-chart" style="width: 100%; height: 100%; background: #000;"></section>
 
                 <aside class="info-panel">
                     
-                    <div class="card kira-panel" id="kira-terminal">
+                    <div class="card kira-panel">
                         <div class="kira-header">
-                            <span class="tag-gold">ALGO KIRA 1.0</span>
-                            <div id="session-indicator" class="session-badge">SUIZA/LONDRES</div>
+                            <span class="tag-gold">KIRA_ALGO_1.0</span>
+                            <div id="session-indicator" class="session-badge">LONDRES_ACTIVE</div>
                         </div>
                         
                         <div class="kira-data-grid">
                             <div class="data-box">
                                 <small>SPREAD</small>
-                                <span id="kira-spread" class="highlight">0.0 pips</span>
+                                <span id="kira-spread" class="highlight">0.0 PIPS</span>
                             </div>
                             <div class="data-box">
-                                <small>LOTES SNIPER</small>
-                                <strong id="suggested-lot" class="highlight">0.01</strong>
+                                <small>LOT_SNIPER</small>
+                                <strong id="suggested-lot" class="highlight" style="color:var(--gold)">0.01</strong>
                             </div>
                         </div>
 
                         <div id="kira-signal-box" class="kira-wait">
-                            <span id="kira-action">ESCANER ACTIVO...</span>
+                            <span id="kira-action">> INICIALIZANDO ESCÁNER...</span>
                         </div>
 
-                        <div class="risk-calculator" style="margin-top:10px;">
-                            <label class="label">BALANCE CUENTA (USD)</label>
-                            <input type="number" id="kira-balance" value="1000" step="100" onchange="calcularLotaje()">
+                        <div class="risk-calculator">
+                            <label class="label">ACCOUNT_BALANCE (USD)</label>
+                            <input type="number" id="kira-balance" value="1000" onchange="calcularLotaje()">
                         </div>
                     </div>
 
                     <div class="card selector-card">
-                        <label class="label">TEMPORALIDAD</label>
+                        <label class="label">TIMEFRAME</label>
                         <div class="timeframe-grid">
                             <button class="tf-btn" onclick="cambiarTF('1m')">1M</button>
-                            <button class="tf-btn" onclick="cambiarTF('5m')">5M</button>
                             <button class="tf-btn active" onclick="cambiarTF('15m')">15M</button>
                             <button class="tf-btn" onclick="cambiarTF('1h')">1H</button>
                         </div>
 
-                        <label class="label" style="margin-top:15px; display:block;">ACTIVO</label>
+                        <label class="label" style="margin-top:15px; display:block;">SELECT_ASSET</label>
                         <select id="asset-selector" class="dark-select" onchange="cargarActivo()">
-                            <optgroup label="CRIPTO">
-                                <option value="BTC" selected>BITCOIN / USD</option>
-                                <option value="ETH">ETHEREUM / USD</option>
+                            <optgroup label="CRIPTO_SMC">
+                                <option value="BTC" selected>BTC / USDT</option>
+                                <option value="ETH">ETH / USDT</option>
                             </optgroup>
-                            <optgroup label="FOREX">
+                            <optgroup label="FOREX_INSTITUTIONAL">
                                 <option value="EURUSD">EUR / USD</option>
                                 <option value="GBPUSD">GBP / USD</option>
                             </optgroup>
@@ -122,7 +117,7 @@
                             <span id="current-price" class="price-value">$0.00</span>
                         </div>
                         <div class="rsi-bar">
-                            <small>RSI (14): <span id="rsi-value">--</span></small>
+                            <small>RSI_LEVEL: <span id="rsi-value">--</span></small>
                             <div class="rsi-track"><div id="rsi-fill" style="width: 50%"></div></div>
                         </div>
                     </div>
@@ -134,33 +129,31 @@
 
     <div id="crypto-modal">
         <div class="payment-card">
-            <h3 style="color:var(--gold); margin-bottom:5px;">KIRA PAY SECURE</h3>
-            <p style="font-size:11px; color:#8b949e;">Deposite USDT (BEP20) para fondear cuenta</p>
+            <h3 style="color:var(--accent); margin:0;">KIRA_PAY_v1.0</h3>
+            <p style="font-size:10px; color:var(--text-dim);">NETWORK: BEP20 (BINANCE SMART CHAIN)</p>
             
             <div class="qr-container">
-                <img id="qr-deposit" src="" alt="QR Depósito">
+                <img id="qr-deposit" src="" alt="QR_CODE">
             </div>
             
             <div class="wallet-address-box" id="wallet-addr" onclick="copyWallet()">
-                Cargando billetera...
+                0x738... (CLICK PARA COPIAR)
             </div>
 
-            <button class="btn-metamask" onclick="conectarMetaMask()">CONECTAR BILLETERA</button>
+            <button class="btn-metamask" onclick="conectarMetaMask()">CONNECT_WEB3_WALLET</button>
             <br>
-            <button onclick="cerrarPasarela()" style="background:none; border:none; color:var(--danger); cursor:pointer; margin-top:15px; font-size:12px;">Cancelar Operación</button>
+            <button onclick="cerrarPasarela()" style="background:none; border:none; color:var(--danger); cursor:pointer; margin-top:15px; font-family:'JetBrains Mono'; font-size:10px;">[ ABORT_TRANSACTION ]</button>
         </div>
     </div>
 
     <script>
-        // Funciones de UI básicas
         function toggleMenu() {
             document.body.classList.toggle('menu-collapsed');
-            setTimeout(() => { if(window.chart) window.dispatchEvent(new Event('resize')); }, 300);
+            setTimeout(() => { if(window.chart) window.dispatchEvent(new Event('resize')); }, 200);
         }
 
         function abrirPasarela() {
             document.getElementById('crypto-modal').style.display = 'flex';
-            // Aquí llamarías a la lógica de KIRA_PAY para generar el QR
             if(window.KIRA_PAY) KIRA_PAY.abrir();
         }
 
@@ -171,7 +164,7 @@
         function copyWallet() {
             const addr = document.getElementById('wallet-addr').innerText;
             navigator.clipboard.writeText(addr);
-            alert("Billetera copiada");
+            alert("DIRECCIÓN COPIADA AL PORTAPAPELES");
         }
     </script>
     <script src="script.js"></script>
