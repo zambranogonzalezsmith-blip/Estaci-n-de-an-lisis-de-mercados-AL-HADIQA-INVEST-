@@ -1,161 +1,204 @@
-/* 1. CONFIGURACIÓN BASE Y VARIABLES */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+/* --- KALI FINANCIAL TERMINAL THEME --- */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600&display=swap');
 
 :root {
-    --bg-main: #010409;
-    --bg-sidebar: #0d1117;
-    --bg-card: #161b22;
-    --border: #30363d;
-    --accent: #58a6ff;
-    --success: #238636;
-    --danger: #f85149;
-    --gold: #d29922;
+    --bg-main: #0a0b10;          /* Kali Deep Black */
+    --bg-sidebar: #0f111a;      /* Navy Blue Dark */
+    --bg-card: #161925;
+    --border: #1f2335;
+    --accent: #1fd1ed;          /* Kali Cyan */
+    --gold: #d29922;            /* Institutional Gold */
+    --success: #00ff9d;
+    --danger: #ff4a4a;
+    --text-dim: #7982a9;
 }
 
-* { box-sizing: border-box; }
+* { box-sizing: border-box; outline: none; }
 
 body {
     background-color: var(--bg-main);
-    color: #e6edf3;
+    color: #c0caf5;
     font-family: 'Inter', sans-serif;
     margin: 0; padding: 0;
     height: 100vh; width: 100vw;
     overflow: hidden;
 }
 
-/* 2. ESTRUCTURA DASHBOARD */
+/* --- ESTRUCTURA DE ALTO RENDIMIENTO --- */
 .dashboard-wrapper {
     display: flex;
-    height: 100vh;
-    width: 100vw;
+    height: 100vh; width: 100vw;
 }
 
-/* SIDEBAR CORREGIDO */
 .sidebar {
     width: 260px;
-    background-color: var(--bg-sidebar);
+    background: var(--bg-sidebar);
     border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
-    padding: 20px;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 999;
-    flex-shrink: 0;
+    padding: 15px;
+    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
 }
 
-.menu-collapsed .sidebar {
-    transform: translateX(-100%);
-    position: absolute;
-}
+.menu-collapsed .sidebar { transform: translateX(-100%); position: absolute; }
 
-/* LOGO FIX */
+/* BRANDING KALI-STYLE */
 .brand {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border);
+    padding: 10px;
+    background: rgba(31, 209, 237, 0.05);
+    border-radius: 8px;
     margin-bottom: 25px;
+    border: 1px solid rgba(31, 209, 237, 0.1);
 }
 
 .main-logo {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    object-fit: cover;
-    border: 1px solid var(--gold);
+    width: 38px; height: 38px;
+    border-radius: 4px;
+    filter: grayscale(20%) contrast(110%);
 }
 
-/* 3. ÁREA DE CONTENIDO Y GRÁFICO (El fix de la pantalla vacía) */
+.brand-text .name {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -1px;
+    display: block;
+}
+
+.brand-text .sub {
+    font-size: 9px;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+/* GRÁFICA Y CONTENIDO */
 .main-content {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    min-width: 0; /* Importante para que el gráfico no se desborde */
+    min-width: 0;
 }
 
 .content-grid {
     display: grid;
-    grid-template-columns: 1fr 320px;
-    flex-grow: 1;
-    height: calc(100vh - 60px); /* Ajuste de altura */
-}
-
-/* ESTO HACE QUE APAREZCA EL GRÁFICO */
-.chart-area {
-    background: var(--bg-main);
-    width: 100%;
+    grid-template-columns: 1fr 340px;
     height: 100%;
-    min-height: 100%; 
-    position: relative;
 }
 
-/* 4. PANELES DE INFORMACIÓN */
+.chart-area {
+    background: #000;
+    position: relative;
+    border-right: 1px solid var(--border);
+}
+
+/* PANELES TIPO TERMINAL */
 .info-panel {
-    background: var(--bg-sidebar);
-    border-left: 1px solid var(--border);
+    background: var(--bg-main);
     padding: 15px;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    overflow-y: auto;
+    gap: 12px;
 }
 
 .card {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: 4px;
     padding: 15px;
+    position: relative;
 }
 
-/* 5. KIRA PAY (Tu código integrado) */
+.kira-panel {
+    border-top: 2px solid var(--gold);
+}
+
+.highlight {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+    font-size: 1.2rem;
+}
+
+/* BOTONES MINIMALISTAS */
+.tf-btn {
+    background: #1a1e2e;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 5px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    border-radius: 2px;
+}
+
+.tf-btn.active {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+}
+
+/* KIRA PAY MODAL (CYBER DESIGN) */
 #crypto-modal {
-    display: none;
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(1, 4, 9, 0.85);
-    backdrop-filter: blur(10px);
-    z-index: 10000;
-    justify-content: center;
-    align-items: center;
-    animation: fadeIn 0.3s ease;
+    display: none; position: fixed;
+    top:0; left:0; width:100%; height:100%;
+    background: rgba(5, 5, 10, 0.9);
+    backdrop-filter: blur(8px);
+    z-index: 2000;
+    justify-content: center; align-items: center;
 }
 
 .payment-card {
     width: 380px;
-    background: #0d1117;
-    border: 1px solid var(--gold);
+    background: var(--bg-card);
+    border: 1px solid var(--accent);
     padding: 30px;
-    border-radius: 20px;
+    border-radius: 4px; /* Kali es angular, no redondeado */
     text-align: center;
+    box-shadow: 0 0 30px rgba(31, 209, 237, 0.1);
 }
 
 .qr-container {
-    background: white; padding: 15px;
-    border-radius: 12px; display: inline-block; margin: 20px 0;
+    background: #fff;
+    padding: 10px;
+    margin: 20px 0;
+    display: inline-block;
 }
 
-.qr-container img { width: 180px; height: 180px; display: block; }
+.wallet-address-box {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    background: #000;
+    padding: 10px;
+    border: 1px dashed var(--accent);
+    color: var(--accent);
+    cursor: pointer;
+}
 
 .btn-metamask {
-    width: 100%; background: linear-gradient(90deg, #f3ba2f, #d29922);
-    color: #000; border: none; padding: 14px; border-radius: 10px;
-    font-weight: 800; cursor: pointer;
+    width: 100%;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 12px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    margin-top: 20px;
+    cursor: pointer;
 }
 
-/* 6. BOTÓN MENÚ */
 #menu-toggle {
-    position: fixed;
-    top: 15px; left: 15px;
+    position: fixed; top: 15px; left: 15px;
     z-index: 1001;
     background: var(--bg-card);
-    border: 1px solid var(--border);
-    color: white; padding: 8px 12px;
-    border-radius: 6px; cursor: pointer;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
-}
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 6px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    border-radius: 4px;
+    }
