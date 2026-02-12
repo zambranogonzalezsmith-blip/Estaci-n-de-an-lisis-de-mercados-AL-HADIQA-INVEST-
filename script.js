@@ -286,3 +286,119 @@ function setupEventListeners() {
         cargarActivo(); // Recarga para aplicar cambios
     };
         }
+// --- MOTOR SMC / LUXALGO LOGIC ---
+const SMC_ENGINE = {
+    // Configuración
+    swing_length: 5, // Cuántas velas a la izquierda/derecha para confirmar un pivote
+
+    analyze: function(candles) {
+        let markers = [];
+        let orderBlocks = []; // Guardaremos las zonas de OB
+        
+        // 1. Detectar Pivotes (Swing Highs / Lows)
+        let pivots = this.getPivots(candles);
+        
+        // 2. Detectar BOS y Order Blocks
+        let lastHigh = null;
+        let lastLow = null;
+
+        pivots.forEach(p => {
+            if (p.type === 'H') {
+                // Si rompe el último alto -> BOS Alcista
+                if (lastHigh && p.price > lastHigh.price) {
+                    // El movimiento que rompió viene de un Order Block Alcista (Bullish OB)
+                    // Buscamos la vela roja más baja entre el Low anterior y este rompimiento
+                    let obCandle = this.findOrderBlock(candles, lastLow.index, p.index, 'bullish');
+                    if (obCandle) {
+                        orderBlocks.push({ type: 'bullish', price: obCandle.high, time: obCandle.time });
+                        markers.push({ time: candles[p.index].time, position: 'aboveBar', color: '#00bcd4', shape: 'arrowUp', text: 'BOS 🚀' });
+                    }
+                }
+                lastHigh = p;
+            } else {
+                // Si rompe el último bajo -> BOS Bajista
+                if (lastLow && p.price < lastLow.price) {
+                    let obCandle = this.findOrderBlock(candles, lastHigh.index, p.index, 'bearish');
+                    if (obCandle) {
+                        orderBlocks.push({ type: 'bearish', price: obCandle.low, time: obCandle.time });
+                        markers.push({ time: candles[p.index].time, position: 'belowBar', color: '#ff4081', shape: 'arrowDown', text: 'BOS 📉' });
+                    }
+                }
+                lastLow = p;
+            }
+        });
+
+        // 3. Generar Señales de Entrada (Re-test del OB)
+        // Revisamos las últimas velas para ver si tocan un OB activo
+        const currentPrice = candles[candles.length - 1].close;
+        const lastOB = orderBlocks.length > 0 ? orderBlocks[orderBlocks.length - 1] : null;
+
+        if (lastOB) {
+            let entrySignal = false;
+            let sl, tp;
+
+            if (lastOB.type === 'bullish' && Math.abs(currentPrice - lastOB.price) / currentPrice < 0.002) {
+                // Precio cerca del OB Alcista
+                entrySignal = true;
+                sl = lastOB.price * 0.998; // SL un poco abajo
+                tp = currentPrice + (currentPrice - sl) * 2.5; // Ratio 1:2.5
+                markers.push({ time: candles[candles.length - 1].time, position: 'belowBar', color: '#00e676', shape: 'arrowUp', text: 'ENTRY BUY 🎯', size: 2 });
+            } 
+            else if (lastOB.type === 'bearish' && Math.abs(currentPrice - lastOB.price) / currentPrice < 0.002) {
+                // Precio cerca del OB Bajista
+                entrySignal = true;
+                sl = lastOB.price * 1.002; // SL un poco arriba
+                tp = currentPrice - (sl - currentPrice) * 2.5; // Ratio 1:2.5
+                markers.push({ time: candles[candles.length - 1].time, position: 'aboveBar', color: '#ff1744', shape: 'arrowDown', text: 'ENTRY SELL 🎯', size: 2 });
+            }
+
+            if (entrySignal) {
+                console.log(`ESTRATEGIA SMC: Entrada detectada. TP: ${tp.toFixed(2)} | SL: ${sl.toFixed(2)}`);
+                // Actualizar Banner
+                const banner = document.getElementById('status-banner');
+                const txt = document.getElementById('signal-text');
+                banner.className = lastOB.type === 'bullish' ? 'buy' : 'sell';
+                txt.innerText = `${lastOB.type === 'bullish' ? 'COMPRA' : 'VENTA'} EN OB | TP: ${tp.toFixed(2)}`;
+            }
+        }
+
+        return markers;
+    },
+
+    getPivots: function(data) {
+        let pivots = [];
+        const L = this.swing_length;
+        for (let i = L; i < data.length - L; i++) {
+            let isHigh = true;
+            let isLow = true;
+            for (let j = 1; j <= L; j++) {
+                if (data[i].high < data[i-j].high || data[i].high < data[i+j].high) isHigh = false;
+                if (data[i].low > data[i-j].low || data[i].low > data[i+j].low) isLow = false;
+            }
+            if (isHigh) pivots.push({ type: 'H', price: data[i].high, index: i, time: data[i].time });
+            if (isLow) pivots.push({ type: 'L', price: data[i].low, index: i, time: data[i].time });
+        }
+        return pivots;
+    },
+
+    findOrderBlock: function(data, startIndex, endIndex, type) {
+        // Busca la última vela de color contrario antes del impulso
+        let bestCandle = null;
+        if (type === 'bullish') {
+            // Buscamos la última vela roja (Open > Close) en el rango
+            for (let i = endIndex; i >= startIndex; i--) {
+                if (data[i].open > data[i].close) { // Vela Roja
+                    return data[i];
+                }
+            }
+        } else {
+            // Buscamos la última vela verde (Close > Open)
+            for (let i = endIndex; i >= startIndex; i--) {
+                if (data[i].close > data[i].open) { // Vela Verde
+                    return data[i];
+                }
+            }
+        }
+        return null;
+    }
+};
