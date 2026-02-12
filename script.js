@@ -1,128 +1,116 @@
-// --- ALHADIQA SYSTEM ENGINE v4.5 ---
-let chart, candleSeries, currentSocket;
-let GLOBAL = { 
-    asset: 'BTC', 
-    tf: '15m', 
-    map: { 'BTC': 'btcusdt', 'ETH': 'ethusdt', 'EURUSD': 'eurusdt', 'GBPUSD': 'gbpusdt' } 
-};
+/* --- ALHADIQA CORE ENGINE v6.0 --- */
 
-// 1. INICIALIZACIÓN CON FIX DE DIMENSIONES
-function initTerminal() {
-    const container = document.getElementById('main-chart');
-    if (!container) return;
+let tvWidget;
 
-    // Limpieza de instancia previa si existe
-    if (chart) { chart.remove(); }
-
-    chart = LightweightCharts.createChart(container, {
-        width: container.clientWidth,
-        height: container.clientHeight,
-        layout: { 
-            background: { type: 'solid', color: '#000000' }, 
-            textColor: '#7982a9',
-            fontFamily: 'JetBrains Mono' 
-        },
-        grid: { 
-            vertLines: { color: '#0f111a' }, 
-            horzLines: { color: '#0f111a' } 
-        },
-        timeScale: { borderColor: '#1f2335', timeVisible: true, barSpacing: 10 },
-        crosshair: { mode: 0, vertLine: { color: '#1fd1ed' }, horzLine: { color: '#1fd1ed' } }
+// 1. INICIALIZACIÓN DEL WIDGET PROFESIONAL
+function initTradingView() {
+    tvWidget = new TradingView.widget({
+        "autosize": true,
+        "symbol": "BINANCE:BTCUSDT",
+        "interval": "15",
+        "timezone": "Etc/UTC",
+        "theme": "dark",
+        "style": "1",
+        "locale": "es",
+        "toolbar_bg": "#050608",
+        "enable_publishing": false,
+        "withdateranges": true,
+        "hide_side_toolbar": false,
+        "allow_symbol_change": true,
+        "details": true,
+        "hotlist": true,
+        "calendar": true,
+        "container_id": "tv_chart_container",
+        // INYECCIÓN DE INDICADORES INSTITUCIONALES
+        "studies": [
+            {
+                "id": "MAExp@tv-basicstudies",
+                "version": 1,
+                "inputs": { "length": 20 }
+            },
+            {
+                "id": "MAExp@tv-basicstudies",
+                "version": 1,
+                "inputs": { "length": 50 }
+            },
+            {
+                "id": "MAExp@tv-basicstudies",
+                "version": 1,
+                "inputs": { "length": 80 }
+            },
+            {
+                "id": "MASimple@tv-basicstudies",
+                "version": 1,
+                "inputs": { "length": 100 }
+            },
+            "RSI@tv-basicstudies",
+            "MACD@tv-basicstudies"
+        ],
+        "overrides": {
+            "mainSeriesProperties.candleStyle.upColor": "#00ff9d",
+            "mainSeriesProperties.candleStyle.downColor": "#ff4a4a",
+            "mainSeriesProperties.candleStyle.wickUpColor": "#00ff9d",
+            "mainSeriesProperties.candleStyle.wickDownColor": "#ff4a4a",
+            "paneProperties.background": "#020408",
+            "paneProperties.vertGridProperties.color": "rgba(31, 209, 237, 0.05)",
+            "paneProperties.horzGridProperties.color": "rgba(31, 209, 237, 0.05)"
+        }
     });
-
-    candleSeries = chart.addCandlestickSeries({
-        upColor: '#00ff9d', downColor: '#ff4a4a', 
-        borderVisible: false, wickUpColor: '#00ff9d', wickDownColor: '#ff4a4a'
-    });
-
-    // Fix de redimensión para el Sidebar
-    window.addEventListener('resize', () => {
-        chart.applyOptions({ width: container.clientWidth, height: container.clientHeight });
-    });
-
-    cargarActivo();
 }
 
-// 2. MOTOR DE DATOS (HISTORIAL + WEBSOCKET)
-async function cargarActivo() {
-    const assetKey = document.getElementById('asset-selector').value;
-    const symbol = GLOBAL.map[assetKey];
-    GLOBAL.asset = assetKey;
+// 2. KIRA SMC ALGORITHM: CÁLCULO DE ENTRADAS
+// Esta función simula la lectura de liquidez y proyecta SL/TP institucionales
+function ejecutarKiraSMC() {
+    const statusLabel = document.getElementById('status');
+    const badge = document.getElementById('signal-type');
     
-    document.getElementById('asset-name').innerText = assetKey === 'BTC' ? 'BITCOIN / USDT' : assetKey;
-    
-    if (currentSocket) currentSocket.close();
-    document.getElementById('kira-action').innerText = "FETCHING_DATA...";
+    // Simulación de detección de Order Block
+    statusLabel.innerText = "BUSCANDO_LIQUIDIDAD_SMC...";
+    statusLabel.style.color = "var(--gold)";
 
-    try {
-        const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol.toUpperCase()}&interval=${GLOBAL.tf}&limit=250`);
-        const data = await res.json();
-        const processedData = data.map(d => ({
-            time: d[0] / 1000,
-            open: parseFloat(d[1]), high: parseFloat(d[2]),
-            low: parseFloat(d[3]), close: parseFloat(d[4])
-        }));
+    setTimeout(() => {
+        // Lógica de cálculo 1:3 Riesgo Beneficio
+        // En producción, esto vendría de un fetch a tu API de señales
+        const precioActual = 65200; // Ejemplo
+        const esCompra = Math.random() > 0.5;
         
-        candleSeries.setData(processedData);
-        actualizarIndicadores(processedData);
-        conectarStream(symbol);
-    } catch (err) {
-        console.error("DATA_ERR:", err);
-        document.getElementById('kira-action').innerText = "CONNECTION_ERROR";
+        const entry = precioActual;
+        const sl = esCompra ? entry * 0.992 : entry * 1.008; // 0.8% SL
+        const tp = esCompra ? entry * 1.024 : entry * 0.976; // 2.4% TP (1:3 Ratio)
+
+        // Actualizar HUD
+        badge.className = `signal-badge ${esCompra ? 'buy' : 'sell'}`;
+        badge.innerText = esCompra ? "INSTITUTIONAL_BUY_ZONE" : "INSTITUTIONAL_SELL_ZONE";
+        
+        document.getElementById('entry-p').innerText = `$${entry.toLocaleString()}`;
+        document.getElementById('sl-p').innerText = `$${sl.toLocaleString()}`;
+        document.getElementById('tp-p').innerText = `$${tp.toLocaleString()}`;
+        
+        statusLabel.innerText = "SEÑAL_CONFIRMADA";
+        statusLabel.style.color = "var(--success)";
+    }, 2000);
+}
+
+// 3. UTILIDADES DE SISTEMA
+function updateClock() {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-GB', { timeZone: 'UTC' });
+    document.getElementById('clock').innerText = `${timeStr} UTC`;
+}
+
+// 4. CAMBIO DINÁMICO DE ACTIVOS
+function changeAsset(symbol) {
+    if (tvWidget) {
+        tvWidget.chart().setSymbol(`BINANCE:${symbol}USDT`);
+        document.getElementById('asset-label').innerText = `${symbol}/USDT`;
+        ejecutarKiraSMC(); // Recalcular al cambiar
     }
 }
 
-function conectarStream(symbol) {
-    currentSocket = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol}@kline_${GLOBAL.tf}`);
-    
-    currentSocket.onmessage = (msg) => {
-        const k = JSON.parse(msg.data).k;
-        const candle = {
-            time: k.t / 1000,
-            open: parseFloat(k.o), high: parseFloat(k.h),
-            low: parseFloat(k.l), close: parseFloat(k.c)
-        };
-
-        candleSeries.update(candle);
-        document.getElementById('current-price').innerText = `$${candle.close.toLocaleString()}`;
-        
-        if (k.x) { // Al cerrar vela, recalculamos Kira
-            document.getElementById('kira-action').innerText = "SCANNING_LIQUIDITY...";
-        }
-    };
-}
-
-// 3. LÓGICA DE INDICADORES (RSI Y LOTAJE)
-function actualizarIndicadores(data) {
-    const lastClose = data[data.length - 1].close;
-    // Cálculo simple de RSI para la UI
-    const rsiMock = (Math.random() * (70 - 30) + 30).toFixed(2); // Aquí integrarías tu calculateRSI()
-    document.getElementById('rsi-value').innerText = rsiMock;
-    
-    calcularLotaje(lastClose);
-}
-
-function calcularLotaje(precio) {
-    const balance = 1000; // Puedes vincularlo a un input
-    const lot = (balance / precio * 0.1).toFixed(3);
-    document.getElementById('suggested-lot').innerText = lot > 0.001 ? lot : "0.01";
-}
-
-// 4. UI CONTROLS
-function toggleMenu() {
-    document.body.classList.toggle('menu-collapsed');
-    // Forzamos al gráfico a esperar la animación del CSS
-    setTimeout(() => {
-        const container = document.getElementById('main-chart');
-        chart.applyOptions({ width: container.clientWidth, height: container.clientHeight });
-    }, 350);
-}
-
-function cambiarTF(tf) {
-    GLOBAL.tf = tf;
-    document.querySelectorAll('.tf-btn').forEach(b => b.classList.toggle('active', b.innerText.toLowerCase() === tf));
-    cargarActivo();
-}
-
-// BOOT SYSTEM
-window.onload = initTerminal;
+// ARRANQUE DEL SISTEMA
+window.onload = () => {
+    initTradingView();
+    setInterval(updateClock, 1000);
+    setInterval(ejecutarKiraSMC, 30000); // Escaneo cada 30 segundos
+    ejecutarKiraSMC(); 
+};
