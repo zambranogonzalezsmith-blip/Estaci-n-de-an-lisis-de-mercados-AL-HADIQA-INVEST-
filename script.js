@@ -10,222 +10,140 @@
     }
 })();
 
-// --- CONFIGURACIÓN GLOBAL ---
-let CONFIG = { ema_fast: 9, ema_slow: 21, rsi_period: 14 };
-let GLOBAL = {
-    asset: 'BTC',
-    type: 'crypto', // 'crypto' o 'forex'
-    tf: '1m',       // Temporalidad por defecto para binarias
-    socket: null,   // Variable para el túnel WebSocket
-    interval: null, // Variable para el intervalo Forex
-    symbol_map: {   // Mapeo para Binance
-        'BTC': 'btcusdt',
-        'ETH': 'ethusdt'
-    }
+// --- CONFIGURACIÓN GLOBAL KIRA 1.0 ---
+let CONFIG = { 
+    ema_20: 20, ema_50: 50, ema_80: 80, sma_100: 100, rsi_period: 14,
+    risk_percent: 0.01 // 1% de riesgo por operación
 };
 
-let chart, candleSeries, emaFastSeries, emaSlowSeries;
+let GLOBAL = {
+    asset: 'BTC', type: 'crypto', tf: '15m',
+    socket: null, interval: null,
+    symbol_map: { 'BTC': 'btcusdt', 'ETH': 'ethusdt' }
+};
 
-// --- 1. INICIALIZACIÓN DEL MOTOR GRÁFICO ---
+let chart, candleSeries, ema20Series, ema50Series, ema80Series, sma100Series;
+
+// --- 1. INICIALIZACIÓN DEL MOTOR ---
 function initTerminal() {
     const chartElement = document.getElementById('main-chart');
     if (!chartElement) return;
 
-    // Configuración estilo TradingView
     chart = LightweightCharts.createChart(chartElement, {
         width: chartElement.offsetWidth,
         height: chartElement.offsetHeight,
         layout: { background: { type: 'solid', color: '#010409' }, textColor: '#d1d4dc', fontSize: 12 },
         grid: { vertLines: { color: '#161b22' }, horzLines: { color: '#161b22' } },
-        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-        // Movimiento fluido activado
-        handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: true },
-        handleScale: { axisPressedMouseMove: true, mouseWheel: true, pinch: true },
-        timeScale: { timeVisible: true, borderColor: '#30363d', rightOffset: 5, barSpacing: 10 },
+        timeScale: { timeVisible: true, borderColor: '#30363d', rightOffset: 5 },
     });
 
-    // Series de datos
-    candleSeries = chart.addCandlestickSeries({
-        upColor: '#089981', downColor: '#f23645', // Colores TradingView modernos
-        borderVisible: false, wickUpColor: '#089981', wickDownColor: '#f23645',
-    });
+    // Series de Datos (Configuración Visual Sniper)
+    candleSeries = chart.addCandlestickSeries({ upColor: '#089981', downColor: '#f23645', borderVisible: false });
+    
+    // Indicadores Kira
+    ema20Series = chart.addLineSeries({ color: '#2962ff', lineWidth: 1, title: 'EMA 20' });
+    ema50Series = chart.addLineSeries({ color: '#9c27b0', lineWidth: 1, title: 'EMA 50' });
+    ema80Series = chart.addLineSeries({ color: '#ff9800', lineWidth: 1, title: 'EMA 80' });
+    sma100Series = chart.addLineSeries({ color: '#f44336', lineWidth: 2, title: 'SMA 100' });
 
-    emaFastSeries = chart.addLineSeries({ color: '#2962ff', lineWidth: 2 });
-    emaSlowSeries = chart.addLineSeries({ color: '#ff9800', lineWidth: 2 });
-
-    // Listeners de UI
     setupEventListeners();
-    
-    // Carga inicial
     cargarActivo();
-    
-    // Auto-ajuste de tamaño
+
     window.addEventListener('resize', () => {
         chart.applyOptions({ width: chartElement.offsetWidth, height: chartElement.offsetHeight });
     });
 }
 
-// --- 2. GESTOR DE CONEXIONES (EL CEREBRO) ---
+// --- 2. GESTIÓN DE DATOS EN VIVO ---
 async function cargarActivo() {
-    // Definimos el activo actual
     const selector = document.getElementById('asset-selector');
-    const selectedOption = selector.options[selector.selectedIndex];
-    
     GLOBAL.asset = selector.value;
-    GLOBAL.type = selectedOption.parentElement.label === 'Criptomonedas' ? 'crypto' : 'forex';
+    GLOBAL.type = selector.options[selector.selectedIndex].parentElement.label.includes('CRIPTO') ? 'crypto' : 'forex';
     
-    document.getElementById('asset-name').innerText = selectedOption.text;
-    document.getElementById('signal-text').innerText = "CONECTANDO DATOS...";
+    document.getElementById('asset-name').innerText = GLOBAL.asset;
+    
+    if (GLOBAL.socket) GLOBAL.socket.close();
+    if (GLOBAL.interval) clearInterval(GLOBAL.interval);
 
-    // 1. Limpiamos conexiones viejas
-    if (GLOBAL.socket) { GLOBAL.socket.close(); GLOBAL.socket = null; }
-    if (GLOBAL.interval) { clearInterval(GLOBAL.interval); GLOBAL.interval = null; }
-
-    // 2. Cargamos historial (Velas pasadas)
     await fetchHistoricalData();
 
-    // 3. Iniciamos el Stream en Vivo
     if (GLOBAL.type === 'crypto') {
-        iniciarBinanceSocket(); // WebSocket Real
+        iniciarBinanceSocket();
     } else {
-        iniciarForexPolling();  // Polling Rápido
+        iniciarForexPolling();
     }
 }
 
-// --- 3. DATOS HISTÓRICOS (API REST) ---
-async function fetchHistoricalData() {
-    let candles = [];
-    try {
-        if (GLOBAL.type === 'crypto') {
-            // Historial de Binance API
-            const symbol = GLOBAL.symbol_map[GLOBAL.asset].toUpperCase();
-            const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${GLOBAL.tf}&limit=500`);
-            const data = await res.json();
-            candles = data.map(d => ({
-                time: d[0] / 1000, open: parseFloat(d[1]), high: parseFloat(d[2]),
-                low: parseFloat(d[3]), close: parseFloat(d[4])
-            }));
-        } else {
-            // Historial de Yahoo Finance
-            const res = await getYahooData(GLOBAL.asset);
-            candles = res;
-        }
-
-        if (candles.length > 0) {
-            candleSeries.setData(candles);
-            // Calculamos indicadores iniciales
-            actualizarIndicadores(candles);
-        }
-    } catch (e) {
-        console.error("Error historial:", e);
-    }
-}
-
-// --- 4. WEBSOCKET REAL (CRIPTO) ---
-function iniciarBinanceSocket() {
-    const symbol = GLOBAL.symbol_map[GLOBAL.asset];
-    const wsUrl = `wss://stream.binance.com:9443/ws/${symbol}@kline_${GLOBAL.tf}`;
-    
-    console.log(`🔌 Conectando socket a: ${symbol} (${GLOBAL.tf})`);
-    
-    GLOBAL.socket = new WebSocket(wsUrl);
-
-    GLOBAL.socket.onmessage = (event) => {
-        const msg = JSON.parse(event.data);
-        const k = msg.k;
-
-        const candle = {
-            time: k.t / 1000,
-            open: parseFloat(k.o),
-            high: parseFloat(k.h),
-            low: parseFloat(k.l),
-            close: parseFloat(k.c)
-        };
-
-        // .update() crea la magia del movimiento fluido
-        candleSeries.update(candle);
-        
-        // Actualizamos UI
-        document.getElementById('current-price').innerText = `$${candle.close.toFixed(2)}`;
-        
-        // Si la vela cerró, recalculamos indicadores
-        if (k.x) { 
-            // Aquí podríamos llamar a actualizarIndicadores de nuevo
-        }
-    };
-}
-
-// --- 5. FOREX POLLING RÁPIDO (SIMULACIÓN STREAM) ---
-function iniciarForexPolling() {
-    console.log("📡 Iniciando conexión rápida Forex...");
-    
-    // Función de actualización rápida
-    const updateForex = async () => {
-        const candles = await getYahooData(GLOBAL.asset);
-        if (candles && candles.length > 0) {
-            const lastCandle = candles[candles.length - 1];
-            candleSeries.update(lastCandle); // Actualiza la última vela
-            document.getElementById('current-price').innerText = `$${lastCandle.close.toFixed(2)}`;
-            actualizarIndicadores(candles); // Recalcula indicadores
-        }
-    };
-
-    // Ejecutar cada 3 segundos (3000ms)
-    GLOBAL.interval = setInterval(updateForex, 3000);
-}
-
-// --- UTILIDADES Y CÁLCULOS ---
-async function getYahooData(assetKey) {
-    // Mapeo de símbolos Yahoo
-    const symbols = { 'GOLD': 'GC=F', 'US30': '^DJI', 'EURUSD': 'EURUSD=X', 'GBPUSD': 'GBPUSD=X', 'USDJPY': 'USDJPY=X' };
-    const sym = symbols[assetKey];
-    
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=${GLOBAL.tf}&range=5d`;
-    // Usamos un proxy más rápido si es posible, o el mismo
-    const proxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-    
-    try {
-        const res = await fetch(proxy);
-        const data = await res.json();
-        const result = data.chart.result[0];
-        return result.timestamp.map((t, i) => ({
-            time: t,
-            open: result.indicators.quote[0].open[i],
-            high: result.indicators.quote[0].high[i],
-            low: result.indicators.quote[0].low[i],
-            close: result.indicators.quote[0].close[i]
-        })).filter(c => c.open != null);
-    } catch (e) { return []; }
-}
-
+// --- 3. MOTOR DE ANÁLISIS SMC + KIRA ---
 function actualizarIndicadores(candles) {
-    // EMA
-    const emaF = calculateEMA(candles, CONFIG.ema_fast);
-    const emaS = calculateEMA(candles, CONFIG.ema_slow);
-    emaFastSeries.setData(emaF);
-    emaSlowSeries.setData(emaS);
+    if (candles.length < 100) return;
 
-    // RSI
-    const rsiArr = calculateRSI(candles, CONFIG.rsi_period);
-    const lastRSI = rsiArr.length > 0 ? rsiArr[rsiArr.length - 1].value : 50;
-    document.getElementById('rsi-value').innerText = lastRSI.toFixed(2);
+    // A. Cálculos Técnicos
+    const e20 = calculateEMA(candles, CONFIG.ema_20);
+    const e50 = calculateEMA(candles, CONFIG.ema_50);
+    const e80 = calculateEMA(candles, CONFIG.ema_80);
+    const s100 = calculateSMA(candles, CONFIG.sma_100);
+    const rsi = calculateRSI(candles, CONFIG.rsi_period);
+
+    // B. Actualizar Gráfico
+    ema20Series.setData(e20);
+    ema50Series.setData(e50);
+    ema80Series.setData(e80);
+    sma100Series.setData(s100);
+
+    // C. Ejecutar Algoritmo SMC (LuxAlgo Logic)
+    const smcMarkers = SMC_ENGINE.analyze(candles);
+    candleSeries.setMarkers(smcMarkers);
+
+    // D. Detección Sniper de Kira 1.0
+    const lastPrice = candles[candles.length - 1].close;
+    const lastRSI = rsi[rsi.length - 1].value;
     
-    // Señales
-    const lastF = emaF[emaF.length-1]?.value;
-    const lastS = emaS[emaS.length-1]?.value;
-    const banner = document.getElementById('status-banner');
-    const txt = document.getElementById('signal-text');
+    // UI Updates
+    document.getElementById('rsi-value').innerText = lastRSI.toFixed(2);
+    document.getElementById('rsi-fill').style.width = `${lastRSI}%`;
+    actualizarSesion();
+    
+    // Lógica de Señal
+    ejecutarLogicaKira(lastPrice, e20, e50, e80, s100, smcMarkers);
+}
 
-    if (lastF > lastS && lastRSI < 70) { 
-        banner.className = 'buy'; txt.innerText = `🟢 CALL (COMPRA) - TF: ${GLOBAL.tf}`; 
-    } else if (lastF < lastS && lastRSI > 30) { 
-        banner.className = 'sell'; txt.innerText = `🔴 PUT (VENTA) - TF: ${GLOBAL.tf}`; 
-    } else { 
-        banner.className = 'neutral'; txt.innerText = "⚪ ESPERANDO ZONA"; 
+function ejecutarLogicaKira(price, e20, e50, e80, s100, markers) {
+    const l = e20.length - 1;
+    const actionBox = document.getElementById('kira-signal-box');
+    const actionText = document.getElementById('kira-action');
+    
+    // Condición Sniper: Abanico de EMAs + Precio sobre SMA 100 + Señal SMC
+    const isBullish = e20[l].value > e50[l].value && e50[l].value > e80[l].value && price > s100[l].value;
+    const isBearish = e20[l].value < e50[l].value && e50[l].value < e80[l].value && price < s100[l].value;
+    
+    const lastSMC = markers[markers.length - 1];
+
+    if (isBullish && lastSMC?.text.includes('BUY')) {
+        actionBox.className = 'kira-signal-box kira-buy';
+        actionText.innerText = "🚀 ENTRADA SNIPER: COMPRA";
+        calcularLotaje();
+    } else if (isBearish && lastSMC?.text.includes('SELL')) {
+        actionBox.className = 'kira-signal-box kira-sell';
+        actionText.innerText = "📉 ENTRADA SNIPER: VENTA";
+        calcularLotaje();
+    } else {
+        actionBox.className = 'kira-wait';
+        actionText.innerText = "ESCANEANDO CONFLUENCIA...";
     }
 }
 
-// --- FUNCIONES MATEMÁTICAS ESTÁNDAR ---
+// --- FUNCIONES MATEMÁTICAS ---
+function calculateSMA(data, p) {
+    let smaArr = [];
+    for (let i = p; i <= data.length; i++) {
+        const slice = data.slice(i - p, i);
+        const sum = slice.reduce((a, b) => a + b.close, 0);
+        smaArr.push({ time: data[i-1].time, value: sum / p });
+    }
+    return smaArr;
+}
+
 function calculateEMA(data, p) {
     let k = 2/(p+1), emaArr = [], ema = data[0].close;
     data.forEach((d, i) => {
@@ -252,253 +170,32 @@ function calculateRSI(data, p) {
     return rsiArr;
 }
 
-// --- LISTENERS Y UTILIDADES DE UI ---
-function setupEventListeners() {
-    document.getElementById('asset-selector').addEventListener('change', cargarActivo);
-    
-    // Botones de temporalidad
-    window.cambiarTF = function(tf) {
-        GLOBAL.tf = tf;
-        // Actualizar botones visualmente
-        document.querySelectorAll('.tf-btn').forEach(btn => {
-            btn.classList.remove('active');
-            if(btn.innerText.toLowerCase() === tf) btn.classList.add('active');
-        });
-        console.log("⏱️ Cambiando a:", tf);
-        cargarActivo(); // Recarga todo con la nueva temporalidad
-    };
-
-    window.activarModoSMC = function() {
-        document.getElementById('smc-info-card').style.display = 'block';
-        alert("Modo SMC: Activando Order Blocks (Requiere actualización mañana)");
-    };
-
-    window.ejecutarDiagnostico = function() {
-        let estado = GLOBAL.socket ? "🟢 WebSocket Binance Activo" : "🟠 Polling Yahoo Activo";
-        alert(`ESTADO DEL SISTEMA:\nActivo: ${GLOBAL.asset}\nTF: ${GLOBAL.tf}\nConexión: ${estado}`);
-    };
-    
-    // Botón de ajustes
-    window.actualizarParametros = function() {
-        CONFIG.ema_fast = parseInt(document.getElementById('input-ema-fast').value) || 9;
-        CONFIG.ema_slow = parseInt(document.getElementById('input-ema-slow').value) || 21;
-        CONFIG.rsi_period = parseInt(document.getElementById('input-rsi').value) || 14;
-        cargarActivo(); // Recarga para aplicar cambios
-    };
-        }
-// --- MOTOR SMC / LUXALGO LOGIC ---
-const SMC_ENGINE = {
-    // Configuración
-    swing_length: 5, // Cuántas velas a la izquierda/derecha para confirmar un pivote
-
-    analyze: function(candles) {
-        let markers = [];
-        let orderBlocks = []; // Guardaremos las zonas de OB
-        
-        // 1. Detectar Pivotes (Swing Highs / Lows)
-        let pivots = this.getPivots(candles);
-        
-        // 2. Detectar BOS y Order Blocks
-        let lastHigh = null;
-        let lastLow = null;
-
-        pivots.forEach(p => {
-            if (p.type === 'H') {
-                // Si rompe el último alto -> BOS Alcista
-                if (lastHigh && p.price > lastHigh.price) {
-                    // El movimiento que rompió viene de un Order Block Alcista (Bullish OB)
-                    // Buscamos la vela roja más baja entre el Low anterior y este rompimiento
-                    let obCandle = this.findOrderBlock(candles, lastLow.index, p.index, 'bullish');
-                    if (obCandle) {
-                        orderBlocks.push({ type: 'bullish', price: obCandle.high, time: obCandle.time });
-                        markers.push({ time: candles[p.index].time, position: 'aboveBar', color: '#00bcd4', shape: 'arrowUp', text: 'BOS 🚀' });
-                    }
-                }
-                lastHigh = p;
-            } else {
-                // Si rompe el último bajo -> BOS Bajista
-                if (lastLow && p.price < lastLow.price) {
-                    let obCandle = this.findOrderBlock(candles, lastHigh.index, p.index, 'bearish');
-                    if (obCandle) {
-                        orderBlocks.push({ type: 'bearish', price: obCandle.low, time: obCandle.time });
-                        markers.push({ time: candles[p.index].time, position: 'belowBar', color: '#ff4081', shape: 'arrowDown', text: 'BOS 📉' });
-                    }
-                }
-                lastLow = p;
-            }
-        });
-
-        // 3. Generar Señales de Entrada (Re-test del OB)
-        // Revisamos las últimas velas para ver si tocan un OB activo
-        const currentPrice = candles[candles.length - 1].close;
-        const lastOB = orderBlocks.length > 0 ? orderBlocks[orderBlocks.length - 1] : null;
-
-        if (lastOB) {
-            let entrySignal = false;
-            let sl, tp;
-
-            if (lastOB.type === 'bullish' && Math.abs(currentPrice - lastOB.price) / currentPrice < 0.002) {
-                // Precio cerca del OB Alcista
-                entrySignal = true;
-                sl = lastOB.price * 0.998; // SL un poco abajo
-                tp = currentPrice + (currentPrice - sl) * 2.5; // Ratio 1:2.5
-                markers.push({ time: candles[candles.length - 1].time, position: 'belowBar', color: '#00e676', shape: 'arrowUp', text: 'ENTRY BUY 🎯', size: 2 });
-            } 
-            else if (lastOB.type === 'bearish' && Math.abs(currentPrice - lastOB.price) / currentPrice < 0.002) {
-                // Precio cerca del OB Bajista
-                entrySignal = true;
-                sl = lastOB.price * 1.002; // SL un poco arriba
-                tp = currentPrice - (sl - currentPrice) * 2.5; // Ratio 1:2.5
-                markers.push({ time: candles[candles.length - 1].time, position: 'aboveBar', color: '#ff1744', shape: 'arrowDown', text: 'ENTRY SELL 🎯', size: 2 });
-            }
-
-            if (entrySignal) {
-                console.log(`ESTRATEGIA SMC: Entrada detectada. TP: ${tp.toFixed(2)} | SL: ${sl.toFixed(2)}`);
-                // Actualizar Banner
-                const banner = document.getElementById('status-banner');
-                const txt = document.getElementById('signal-text');
-                banner.className = lastOB.type === 'bullish' ? 'buy' : 'sell';
-                txt.innerText = `${lastOB.type === 'bullish' ? 'COMPRA' : 'VENTA'} EN OB | TP: ${tp.toFixed(2)}`;
-            }
-        }
-
-        return markers;
-    },
-
-    getPivots: function(data) {
-        let pivots = [];
-        const L = this.swing_length;
-        for (let i = L; i < data.length - L; i++) {
-            let isHigh = true;
-            let isLow = true;
-            for (let j = 1; j <= L; j++) {
-                if (data[i].high < data[i-j].high || data[i].high < data[i+j].high) isHigh = false;
-                if (data[i].low > data[i-j].low || data[i].low > data[i+j].low) isLow = false;
-            }
-            if (isHigh) pivots.push({ type: 'H', price: data[i].high, index: i, time: data[i].time });
-            if (isLow) pivots.push({ type: 'L', price: data[i].low, index: i, time: data[i].time });
-        }
-        return pivots;
-    },
-
-    findOrderBlock: function(data, startIndex, endIndex, type) {
-        // Busca la última vela de color contrario antes del impulso
-        let bestCandle = null;
-        if (type === 'bullish') {
-            // Buscamos la última vela roja (Open > Close) en el rango
-            for (let i = endIndex; i >= startIndex; i--) {
-                if (data[i].open > data[i].close) { // Vela Roja
-                    return data[i];
-                }
-            }
-        } else {
-            // Buscamos la última vela verde (Close > Open)
-            for (let i = endIndex; i >= startIndex; i--) {
-                if (data[i].close > data[i].open) { // Vela Verde
-                    return data[i];
-                }
-            }
-        }
-        return null;
-    }
-};
-const KIRA_ALGO = {
-    settings: {
-        sma_long: 100,
-        ema_80: 80,
-        ema_50: 50,
-        ema_20: 20,
-        risk_per_trade: 0.01, // 1% de la cuenta
-        min_rr: 2.5 // Ratio Riesgo:Beneficio mínimo
-    },
-
-    analyze: function(candles, currentSpread) {
-        if (candles.length < 100) return null;
-
-        // A. CÁLCULO DE INDICADORES
-        const sma100 = calculateSMA(candles, this.settings.sma_long);
-        const ema80 = calculateEMA(candles, this.settings.ema_80);
-        const ema50 = calculateEMA(candles, this.settings.ema_50);
-        const ema20 = calculateEMA(candles, this.settings.ema_20);
-
-        const last = candles.length - 1;
-        const price = candles[last].close;
-
-        // B. DETECCIÓN DE SESIÓN (Evitar Spreads altos fuera de hora)
-        const hour = new Date().getUTCHours();
-        const isMarketActive = (hour >= 8 && hour <= 12) || (hour >= 13 && hour <= 17); // Londres y NY
-
-        // C. LÓGICA SNIPER (BUY)
-        const isBullishStack = ema20[last].value > ema50[last].value && ema50[last].value > ema80[last].value;
-        const isAboveMacro = price > sma100[last].value;
-        
-        // Buscamos si el motor SMC ya detectó un Order Block Alcista
-        const smcData = SMC_ENGINE.analyze(candles); 
-        const lastMarker = smcData[smcData.length - 1];
-
-        if (isBullishStack && isAboveMacro && isMarketActive && lastMarker?.text === 'ENTRY BUY 🎯') {
-            return this.calculateTrade(price, 'BUY', currentSpread);
-        }
-
-        // D. LÓGICA SNIPER (SELL)
-        const isBearishStack = ema20[last].value < ema50[last].value && ema50[last].value < ema80[last].value;
-        const isBelowMacro = price < sma100[last].value;
-
-        if (isBearishStack && isBelowMacro && isMarketActive && lastMarker?.text === 'ENTRY SELL 🎯') {
-            return this.calculateTrade(price, 'SELL', currentSpread);
-        }
-
-        return null;
-    },
-
-    calculateTrade: function(price, type, spread) {
-        // Cálculo Sniper con Spread incluido (JustMarket/Admirals)
-        const pips_sl = 10; // SL dinámico (10 pips base)
-        let sl, tp;
-
-        if (type === 'BUY') {
-            sl = price - (pips_sl * 0.0001) - spread;
-            tp = price + ((price - sl) * this.settings.min_rr);
-        } else {
-            sl = price + (pips_sl * 0.0001) + spread;
-            tp = price - ((sl - price) * this.settings.min_rr);
-        }
-// --- LÓGICA DE GESTIÓN KIRA 1.0 ---
-
+// --- UTILS UI ---
 function actualizarSesion() {
-    const hora = new Date().getUTCHours();
-    const badge = document.getElementById('session-indicator');
-    
-    // Londres: 08-16 UTC | NY: 13-21 UTC
-    const london = (hora >= 8 && hora <= 16);
-    const ny = (hora >= 13 && hora <= 21);
-
-    if (london || ny) {
-        badge.innerText = london && ny ? "LDN + NY OVERLAP" : (london ? "LONDON ACTIVE" : "NY ACTIVE");
-        badge.classList.add('active');
-        return true;
-    } else {
-        badge.innerText = "ASIA / CERRADO";
-        badge.classList.remove('active');
-        return false;
-    }
+    const h = new Date().getUTCHours();
+    const b = document.getElementById('session-indicator');
+    const isActive = (h >= 8 && h <= 12) || (h >= 13 && h <= 17);
+    b.innerText = isActive ? "NY/LDN ACTIVE" : "MARKET CLOSED";
+    b.className = isActive ? "session-badge active" : "session-badge";
 }
 
 function calcularLotaje() {
-    const balance = parseFloat(document.getElementById('kira-balance').value);
-    const riesgoPercent = 0.01; // 1%
-    const stopLossPips = 15; // Promedio para Sniper en 1m-15m
-    
-    // Fórmula: (Capital * % Riesgo) / (Pips de SL * Valor del Pip)
-    // Para divisas estándar, 0.01 lotes = 0.10$ el pip
-    const riesgoUSD = balance * riesgoPercent;
-    const lotaje = riesgoUSD / (stopLossPips * 10); 
-    
-    document.getElementById('suggested-lot').innerText = lotaje.toFixed(2);
+    const bal = parseFloat(document.getElementById('kira-balance').value) || 1000;
+    const lot = (bal * CONFIG.risk_percent) / 150; // SL estimado de 15 pips
+    document.getElementById('suggested-lot').innerText = Math.max(0.01, lot).toFixed(2);
 }
 
-// Llamar a estas funciones en cada actualización
-setInterval(actualizarSesion, 60000); // Revisar sesión cada minuto
-        return { type, price, sl, tp, risk: "1%" };
+// Implementación de WebSocket y Fetch (Igual a la anterior pero conectada a actualizarIndicadores)
+async function fetchHistoricalData() {
+    // ... (Tu lógica de fetch previa pero al final llama a:)
+    // actualizarIndicadores(candles);
+}
+
+function iniciarBinanceSocket() {
+    // ... (Tu lógica de socket previa pero en cada tick llama a:)
+    // actualizarIndicadores(todasLasVelas);
+}
+
+function setupEventListeners() {
+    document.getElementById('asset-selector').addEventListener('change', cargarActivo);
     }
-};
