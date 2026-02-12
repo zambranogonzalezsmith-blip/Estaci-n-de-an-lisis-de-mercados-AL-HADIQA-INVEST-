@@ -3,122 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ALHADIQA INVEST | TERMINAL v3.1</title>
+    <title>ALHADIQA | Institutional Terminal</title>
     
     <link rel="icon" type="image/jpeg" href="icon.jpg">
-    <link rel="apple-touch-icon" href="icon.jpg">
     <link rel="stylesheet" href="style.css">
-    
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
 </head>
 <body class="menu-collapsed">
     
-    <button id="menu-toggle" onclick="toggleMenu()">
-        <span class="icon">☰</span> <small>ROOT@ALHADIQA</small>
-    </button>
+    <nav class="top-bar">
+        <button class="nav-trigger" onclick="toggleMenu()">
+            <span class="root-label">TERMINAL@ALHADIQA:~$</span>
+            <span class="status-pill">ACTIVE</span>
+        </button>
+        <div class="server-time" id="digital-clock">00:00:00 UTC</div>
+    </nav>
 
     <div class="dashboard-wrapper">
-        <nav class="sidebar" id="sidebar">
-            <div class="brand">
-                <img src="icon.jpg" alt="Logo" class="main-logo" onerror="this.style.border='1px solid var(--accent)'">
-                <div class="brand-text">
-                    <span class="name">ALHADIQA</span>
-                    <span class="sub">INSTITUTIONAL HQ</span>
+        <aside class="sidebar" id="sidebar">
+            <div class="brand-container">
+                <img src="icon.jpg" alt="Logo" class="main-logo">
+                <div class="brand-info">
+                    <span class="brand-name">ALHADIQA</span>
+                    <span class="brand-tag">QUANTITATIVE DESK</span>
                 </div>
             </div>
 
-            <div class="menu-section">
-                <small class="menu-title">-- OPERATIVA_CORE</small>
-                <ul class="nav-links">
-                    <li class="active"><a href="#">📈 TERMINAL_LIVE</a></li>
-                    <li><a href="#" onclick="abrirPasarela()">💎 KIRA_PAY_SECURE</a></li>
-                    <li><a href="https://www.investing.com/economic-calendar/" target="_blank">📅 CALENDARIO_ECON</a></li>
-                </ul>
+            <div class="nav-group">
+                <label>OPERATIVA</label>
+                <a href="#" class="nav-item active">📈 Market Terminal</a>
+                <a href="#" onclick="abrirPasarela()" class="nav-item">💳 Kira Pay Secure</a>
+                <a href="https://www.investing.com/economic-calendar/" target="_blank" class="nav-item">📅 Economic Feed</a>
             </div>
 
-            <div class="menu-section">
-                <small class="menu-title">-- KIRA_TOOLS</small>
-                <ul class="nav-links">
-                    <li><a href="#" onclick="ejecutarDiagnostico()">🔍 TEST_LATENCIA</a></li>
-                    <li><a href="#">📜 LOG_ALERTAS</a></li>
-                </ul>
+            <div class="nav-group">
+                <label>ENGINE_TOOLS</label>
+                <a href="#" onclick="ejecutarDiagnostico()" class="nav-item">🔍 Network Latency</a>
+                <a href="#" class="nav-item">📜 Signal Logs</a>
             </div>
 
             <div class="sidebar-footer">
-                <div class="status-indicator">
-                    <div class="dot green"></div>
-                    <span>SYSTEM: ONLINE</span>
-                </div>
-                <button class="close-sidebar" onclick="toggleMenu()">[ EXIT_PANEL ]</button>
+                <button class="btn-collapse" onclick="toggleMenu()">COLLAPSE_SYSTEM_CORE</button>
             </div>
-        </nav>
+        </aside>
 
-        <main class="main-content">
-            <header id="status-banner" class="neutral">
-                <div class="signal-badge" id="signal-text">SCANNING_MARKET...</div>
-            </header>
+        <main class="viewport">
+            <div class="ticker-wrap">
+                <div class="ticker-item" id="signal-text">SYSTEM_READY: SCANNING_LIQUIDITY_POOLS...</div>
+            </div>
 
-            <div class="content-grid">
-                <section class="chart-area" id="main-chart" style="width: 100%; height: 100%; background: #000;"></section>
+            <div class="workspace-grid">
+                <section class="chart-container">
+                    <div id="main-chart" class="chart-canvas"></div>
+                </section>
 
-                <aside class="info-panel">
+                <aside class="data-rail">
                     
-                    <div class="card kira-panel">
-                        <div class="kira-header">
-                            <span class="tag-gold">KIRA_ALGO_1.0</span>
-                            <div id="session-indicator" class="session-badge">LONDRES_ACTIVE</div>
+                    <div class="glass-card engine-status">
+                        <div class="card-head">
+                            <span class="engine-tag">KIRA_ALGO_v3.2</span>
+                            <span class="session-dot" title="Live Session"></span>
                         </div>
                         
-                        <div class="kira-data-grid">
-                            <div class="data-box">
-                                <small>SPREAD</small>
-                                <span id="kira-spread" class="highlight">0.0 PIPS</span>
+                        <div class="metrics-row">
+                            <div class="metric">
+                                <label>SPREAD</label>
+                                <span id="kira-spread" class="val">0.00</span>
                             </div>
-                            <div class="data-box">
-                                <small>LOT_SNIPER</small>
-                                <strong id="suggested-lot" class="highlight" style="color:var(--gold)">0.01</strong>
+                            <div class="metric">
+                                <label>SNIPER_LOT</label>
+                                <span id="suggested-lot" class="val-gold">0.01</span>
                             </div>
                         </div>
 
-                        <div id="kira-signal-box" class="kira-wait">
-                            <span id="kira-action">> INICIALIZANDO ESCÁNER...</span>
+                        <div id="kira-signal-box" class="signal-idle">
+                            <span id="kira-action">IDLE_SCANNING</span>
                         </div>
 
-                        <div class="risk-calculator">
-                            <label class="label">ACCOUNT_BALANCE (USD)</label>
+                        <div class="input-group">
+                            <label>EQUITY_BASE (USD)</label>
                             <input type="number" id="kira-balance" value="1000" onchange="calcularLotaje()">
                         </div>
                     </div>
 
-                    <div class="card selector-card">
-                        <label class="label">TIMEFRAME</label>
-                        <div class="timeframe-grid">
-                            <button class="tf-btn" onclick="cambiarTF('1m')">1M</button>
-                            <button class="tf-btn active" onclick="cambiarTF('15m')">15M</button>
-                            <button class="tf-btn" onclick="cambiarTF('1h')">1H</button>
+                    <div class="glass-card controls">
+                        <div class="tf-selector">
+                            <button onclick="cambiarTF('1m')">1M</button>
+                            <button class="active" onclick="cambiarTF('15m')">15M</button>
+                            <button onclick="cambiarTF('1h')">1H</button>
                         </div>
-
-                        <label class="label" style="margin-top:15px; display:block;">SELECT_ASSET</label>
-                        <select id="asset-selector" class="dark-select" onchange="cargarActivo()">
-                            <optgroup label="CRIPTO_SMC">
-                                <option value="BTC" selected>BTC / USDT</option>
-                                <option value="ETH">ETH / USDT</option>
+                        <select id="asset-selector" class="custom-select" onchange="cargarActivo()">
+                            <optgroup label="DIGITAL_ASSETS">
+                                <option value="BTC" selected>BTC/USDT (Spot)</option>
+                                <option value="ETH">ETH/USDT (Spot)</option>
                             </optgroup>
-                            <optgroup label="FOREX_INSTITUTIONAL">
-                                <option value="EURUSD">EUR / USD</option>
-                                <option value="GBPUSD">GBP / USD</option>
+                            <optgroup label="FIAT_PAIRS">
+                                <option value="EURUSD">EUR/USD (Institutional)</option>
+                                <option value="GBPUSD">GBP/USD (Institutional)</option>
                             </optgroup>
                         </select>
                     </div>
 
-                    <div class="card price-display">
-                        <div class="price-info">
-                            <span id="asset-name" class="asset-title">BITCOIN</span>
-                            <span id="current-price" class="price-value">$0.00</span>
+                    <div class="glass-card telemetry">
+                        <div class="price-stack">
+                            <span id="asset-name" class="asset-id">BITCOIN</span>
+                            <span id="current-price" class="live-price">$0.00</span>
                         </div>
-                        <div class="rsi-bar">
-                            <small>RSI_LEVEL: <span id="rsi-value">--</span></small>
-                            <div class="rsi-track"><div id="rsi-fill" style="width: 50%"></div></div>
+                        <div class="gauge-wrap">
+                            <div class="gauge-label">RSI_14: <span id="rsi-value">--</span></div>
+                            <div class="gauge-track"><div id="rsi-fill" class="gauge-bar"></div></div>
                         </div>
                     </div>
 
@@ -127,29 +120,32 @@
         </main>
     </div>
 
-    <div id="crypto-modal">
-        <div class="payment-card">
-            <h3 style="color:var(--accent); margin:0;">KIRA_PAY_v1.0</h3>
-            <p style="font-size:10px; color:var(--text-dim);">NETWORK: BEP20 (BINANCE SMART CHAIN)</p>
-            
-            <div class="qr-container">
-                <img id="qr-deposit" src="" alt="QR_CODE">
+    <div id="crypto-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>KIRA_PAY_GATEWAY</h3>
+                <button class="close-btn" onclick="cerrarPasarela()">×</button>
             </div>
-            
-            <div class="wallet-address-box" id="wallet-addr" onclick="copyWallet()">
-                0x738... (CLICK PARA COPIAR)
+            <div class="qr-frame">
+                <img id="qr-deposit" src="" alt="Secure QR">
             </div>
-
-            <button class="btn-metamask" onclick="conectarMetaMask()">CONNECT_WEB3_WALLET</button>
-            <br>
-            <button onclick="cerrarPasarela()" style="background:none; border:none; color:var(--danger); cursor:pointer; margin-top:15px; font-family:'JetBrains Mono'; font-size:10px;">[ ABORT_TRANSACTION ]</button>
+            <div class="address-strip" onclick="copyWallet()">
+                <span id="wallet-addr">0x738...</span>
+                <small>COPY_HASH</small>
+            </div>
+            <button class="btn-primary" onclick="conectarMetaMask()">EXECUTE_WEB3_LINK</button>
         </div>
     </div>
 
     <script>
+        // Reloj Digital
+        setInterval(() => {
+            document.getElementById('digital-clock').innerText = new Date().toISOString().split('T')[1].split('.')[0] + ' UTC';
+        }, 1000);
+
         function toggleMenu() {
             document.body.classList.toggle('menu-collapsed');
-            setTimeout(() => { if(window.chart) window.dispatchEvent(new Event('resize')); }, 200);
+            setTimeout(() => { if(window.chart) window.dispatchEvent(new Event('resize')); }, 250);
         }
 
         function abrirPasarela() {
@@ -157,14 +153,12 @@
             if(window.KIRA_PAY) KIRA_PAY.abrir();
         }
 
-        function cerrarPasarela() {
-            document.getElementById('crypto-modal').style.display = 'none';
-        }
+        function cerrarPasarela() { document.getElementById('crypto-modal').style.display = 'none'; }
 
         function copyWallet() {
             const addr = document.getElementById('wallet-addr').innerText;
             navigator.clipboard.writeText(addr);
-            alert("DIRECCIÓN COPIADA AL PORTAPAPELES");
+            alert("HASH COPIADO AL PORTAPAPELES SEGURIZADO");
         }
     </script>
     <script src="script.js"></script>
