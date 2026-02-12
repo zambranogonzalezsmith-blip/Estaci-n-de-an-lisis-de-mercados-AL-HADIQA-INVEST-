@@ -273,4 +273,21 @@ select#asset-selector {
     background: #238636;
     color: white;
     border-color: #2ea043;
+    
 }
+.kira-panel {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border: 1px solid #0f3460;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.session-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.7em;
+    font-weight: bold;
+}
+.ny { background: #58a6ff; color: #fff; }
+.london { background: #238636; color: #fff; }
