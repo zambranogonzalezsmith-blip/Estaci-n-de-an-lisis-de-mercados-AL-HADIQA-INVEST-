@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Alhadiqainvest | HQ Terminal</title>
+    <title>Alhadiqa Invest | HQ Terminal & Kira Pay</title>
     
     <link rel="icon" type="image/jpeg" href="icon.jpg">
     <link rel="apple-touch-icon" href="icon.jpg">
@@ -14,7 +14,7 @@
 <body class="menu-collapsed">
     
     <div id="lib-error" style="display:none; position:fixed; top:0; left:0; width:100%; background:#f23645; color:white; text-align:center; z-index:9999; padding:12px; font-family: sans-serif;">
-        ⚠️ <strong>ERROR DE CARGA:</strong> Motor de gráficos no detectado. Revise su conexión.
+        ⚠️ <strong>ERROR DE CARGA:</strong> Motor de gráficos no detectado. Intentando recuperación...
     </div>
 
     <button id="menu-toggle" onclick="toggleMenu()" title="Configuración y Navegación">
@@ -35,7 +35,7 @@
                 <small class="menu-title">OPERATIVA</small>
                 <ul class="nav-links">
                     <li class="active"><a href="index.html">📈 Terminal de Trading</a></li>
-                    <li><a href="#" id="nav-forex-smc">🛡️ Estrategia SMC</a></li>
+                    <li><a href="#" onclick="abrirPasarela()">💎 Pagar con Crypto</a></li>
                     <li><a href="https://www.investing.com/economic-calendar/" target="_blank">📅 Calendario Económico</a></li>
                 </ul>
             </div>
@@ -68,7 +68,7 @@
                 <aside class="info-panel">
                     
                     <div class="card kira-panel" id="kira-terminal">
-                        <div class="card-header">
+                        <div class="kira-header">
                             <span class="tag-gold">ALGO KIRA 1.0</span>
                             <div id="session-indicator" class="session-badge">SUIZA/LONDRES</div>
                         </div>
@@ -85,44 +85,35 @@
                         </div>
 
                         <div id="kira-signal-box" class="kira-wait">
-                            <div class="pulse-icon"></div>
                             <span id="kira-action">ESCANER ACTIVO...</span>
                         </div>
 
-                        <div class="risk-input-group">
-                            <label>BALANCE CUENTA (USD)</label>
+                        <div class="risk-calculator" style="margin-top:10px;">
+                            <label class="label">BALANCE CUENTA (USD)</label>
                             <input type="number" id="kira-balance" value="1000" step="100" onchange="calcularLotaje()">
                         </div>
                     </div>
 
                     <div class="card selector-card">
-                        <div class="selector-group">
-                            <label>TEMPORALIDAD</label>
-                            <div class="timeframe-grid">
-                                <button class="tf-btn" onclick="cambiarTF('1m')">1M</button>
-                                <button class="tf-btn" onclick="cambiarTF('5m')">5M</button>
-                                <button class="tf-btn active" onclick="cambiarTF('15m')">15M</button>
-                                <button class="tf-btn" onclick="cambiarTF('1h')">1H</button>
-                            </div>
+                        <label class="label">TEMPORALIDAD</label>
+                        <div class="timeframe-grid">
+                            <button class="tf-btn" onclick="cambiarTF('1m')">1M</button>
+                            <button class="tf-btn" onclick="cambiarTF('5m')">5M</button>
+                            <button class="tf-btn active" onclick="cambiarTF('15m')">15M</button>
+                            <button class="tf-btn" onclick="cambiarTF('1h')">1H</button>
                         </div>
 
-                        <div class="selector-group">
-                            <label>ACTIVO SELECCIONADO</label>
-                            <select id="asset-selector" class="dark-select">
-                                <optgroup label="CRIPTO (WEBSOCKET LIVE)">
-                                    <option value="BTC" selected>BITCOIN / USD</option>
-                                    <option value="ETH">ETHEREUM / USD</option>
-                                </optgroup>
-                                <optgroup label="FOREX (HIGH PRECISION)">
-                                    <option value="EURUSD">EUR / USD</option>
-                                    <option value="GBPUSD">GBP / USD</option>
-                                    <option value="USDJPY">USD / JPY</option>
-                                </optgroup>
-                                <optgroup label="METALES">
-                                    <option value="GOLD">XAU / USD (ORO)</option>
-                                </optgroup>
-                            </select>
-                        </div>
+                        <label class="label" style="margin-top:15px; display:block;">ACTIVO</label>
+                        <select id="asset-selector" class="dark-select" onchange="cargarActivo()">
+                            <optgroup label="CRIPTO">
+                                <option value="BTC" selected>BITCOIN / USD</option>
+                                <option value="ETH">ETHEREUM / USD</option>
+                            </optgroup>
+                            <optgroup label="FOREX">
+                                <option value="EURUSD">EUR / USD</option>
+                                <option value="GBPUSD">GBP / USD</option>
+                            </optgroup>
+                        </select>
                     </div>
 
                     <div class="card price-display">
@@ -136,45 +127,51 @@
                         </div>
                     </div>
 
-                    <div class="card smc-card" id="smc-info-card" style="display: none;">
-                        <span class="label">ESTRUCTURA INSTITUCIONAL</span>
-                        <div class="smc-status-box">
-                            <span id="smc-status">BUSCANDO BOS...</span>
-                        </div>
-                    </div>
-
-                    <details class="card settings-details">
-                        <summary>⚙️ PARÁMETROS DEL ALGORITMO</summary>
-                        <div class="settings-content">
-                            <div class="field">
-                                <label>EMA Rápida (Cruce)</label>
-                                <input type="number" id="input-ema-fast" value="20" onchange="actualizarParametros()">
-                            </div>
-                            <div class="field">
-                                <label>EMA Media (Fuerza)</label>
-                                <input type="number" id="input-ema-mid" value="50" onchange="actualizarParametros()">
-                            </div>
-                            <div class="field">
-                                <label>EMA Lenta (Tendencia)</label>
-                                <input type="number" id="input-ema-slow" value="80" onchange="actualizarParametros()">
-                            </div>
-                            <button class="btn-apply" onclick="cargarActivo()">REINICIAR MOTOR</button>
-                        </div>
-                    </details>
                 </aside>
             </div>
         </main>
     </div>
 
+    <div id="crypto-modal">
+        <div class="payment-card">
+            <h3 style="color:var(--gold); margin-bottom:5px;">KIRA PAY SECURE</h3>
+            <p style="font-size:11px; color:#8b949e;">Deposite USDT (BEP20) para fondear cuenta</p>
+            
+            <div class="qr-container">
+                <img id="qr-deposit" src="" alt="QR Depósito">
+            </div>
+            
+            <div class="wallet-address-box" id="wallet-addr" onclick="copyWallet()">
+                Cargando billetera...
+            </div>
+
+            <button class="btn-metamask" onclick="conectarMetaMask()">CONECTAR BILLETERA</button>
+            <br>
+            <button onclick="cerrarPasarela()" style="background:none; border:none; color:var(--danger); cursor:pointer; margin-top:15px; font-size:12px;">Cancelar Operación</button>
+        </div>
+    </div>
+
     <script>
+        // Funciones de UI básicas
         function toggleMenu() {
             document.body.classList.toggle('menu-collapsed');
-            // Redimensionar gráfico con retraso para esperar la animación del CSS
-            setTimeout(() => { 
-                if(window.chart) {
-                    window.dispatchEvent(new Event('resize'));
-                }
-            }, 300);
+            setTimeout(() => { if(window.chart) window.dispatchEvent(new Event('resize')); }, 300);
+        }
+
+        function abrirPasarela() {
+            document.getElementById('crypto-modal').style.display = 'flex';
+            // Aquí llamarías a la lógica de KIRA_PAY para generar el QR
+            if(window.KIRA_PAY) KIRA_PAY.abrir();
+        }
+
+        function cerrarPasarela() {
+            document.getElementById('crypto-modal').style.display = 'none';
+        }
+
+        function copyWallet() {
+            const addr = document.getElementById('wallet-addr').innerText;
+            navigator.clipboard.writeText(addr);
+            alert("Billetera copiada");
         }
     </script>
     <script src="script.js"></script>
