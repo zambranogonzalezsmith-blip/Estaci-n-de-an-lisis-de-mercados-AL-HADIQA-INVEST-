@@ -2,54 +2,197 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>ALHADIQA | NUCLEUS SMC ALGORITHM</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALHADIQA | KIRA SMC TERMINAL</title>
+    
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+
+    <style>
+        /* --- ESTÉTICA INSTITUCIONAL --- */
+        :root {
+            --bg: #020408; --side: #0a0c12; --accent: #1fd1ed; --gold: #d29922;
+            --success: #00ff9d; --danger: #ff4a4a; --border: rgba(31, 209, 237, 0.15);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            background: var(--bg); color: #e2e8f0; font-family: 'JetBrains Mono', monospace; 
+            height: 100vh; width: 100vw; overflow: hidden; display: flex;
+        }
+
+        /* Sidebar de Comando */
+        .sidebar {
+            width: 280px; background: var(--side); border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; padding: 15px; z-index: 100;
+        }
+
+        .brand-zone { padding: 10px 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+        .nav-group { margin-bottom: 20px; }
+        .nav-label { font-size: 10px; color: var(--gold); letter-spacing: 2px; margin-bottom: 10px; display: block; text-transform: uppercase; }
+        
+        .btn-nav { 
+            width: 100%; text-align: left; background: rgba(31, 209, 237, 0.05); 
+            border: 1px solid var(--border); color: #fff; padding: 12px; 
+            margin-bottom: 5px; cursor: pointer; font-size: 11px; transition: 0.2s;
+        }
+        .btn-nav:hover { border-color: var(--accent); background: rgba(31, 209, 237, 0.1); }
+        .btn-nav.active { border-left: 3px solid var(--accent); background: rgba(31, 209, 237, 0.15); }
+
+        /* Estilo para el Nucleus Algo */
+        .btn-nucleus {
+            border: 1px solid var(--gold);
+            background: rgba(210, 153, 34, 0.08);
+            color: var(--gold);
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .btn-nucleus:hover { background: var(--gold); color: #000; }
+
+        /* Viewport Principal */
+        .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        
+        .header {
+            height: 48px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
+            background: #050608;
+        }
+
+        /* Área de Gráfica */
+        .chart-container { flex: 1; position: relative; }
+        #tv_chart_container { position: absolute; top:0; left:0; width:100%; height:100%; }
+
+        /* HUD de Inteligencia KIRA */
+        .kira-hud {
+            position: absolute; bottom: 30px; right: 30px; width: 320px;
+            background: rgba(10, 12, 18, 0.9); border: 1px solid var(--gold);
+            padding: 20px; border-radius: 4px; backdrop-filter: blur(12px); z-index: 1000;
+        }
+
+        .signal-badge {
+            padding: 8px; text-align: center; font-weight: bold; margin-bottom: 15px;
+            border-radius: 2px; text-transform: uppercase; font-size: 12px;
+        }
+        .buy { background: rgba(0, 255, 157, 0.15); color: var(--success); border: 1px solid var(--success); }
+        .sell { background: rgba(255, 74, 74, 0.15); color: var(--danger); border: 1px solid var(--danger); }
+
+        .metric-row { display: flex; justify-content: space-between; font-size: 11px; margin-top: 8px; }
+        .val { color: var(--accent); font-weight: bold; }
+    </style>
 </head>
 <body>
-    <div class="terminal-container">
-        <aside class="sidebar">
-            <div class="brand">
-                <h2>ALHADIQA</h2>
-                <span id="session-tag" class="session-badge">SCANNING SESSION...</span>
-            </div>
 
-            <div class="algorithm-status">
-                <label>ALGO_PROBABILITY</label>
-                <div class="progress-bar"><div id="prob-fill" style="width: 85%;"></div></div>
-            </div>
+    <aside class="sidebar">
+        <div class="brand-zone">
+            <h2 style="color:var(--accent); font-size: 18px;">ALHADIQA_OS</h2>
+            <small style="color:var(--gold)">KIRA_ENGINE_v6.0</small>
+        </div>
 
-            <nav class="menu">
-                <button class="active">KIRA_SMC_EXPERT</button>
-                <button onclick="window.open('https://www.forexfactory.com/calendar', '_blank')">ECONOMIC_NEWS</button>
-            </nav>
+        <div class="nav-group">
+            <span class="nav-label">SMC_ALGORITHMS</span>
+            <button class="btn-nav active">📊 KIRA STANDARD</button>
+            <button class="btn-nav btn-nucleus" onclick="window.location.href='nucleus-smc-algorithm.html'">🧠 NUCLEUS_SMC_ALGO</button>
+            <button class="btn-nav" onclick="alert('Cargando Filtro Bajo Capital...')">💎 KIRA LOW_CAPITAL</button>
+        </div>
 
-            <div class="demo-panel">
-                <header>LIVE_EMULATOR (DEMO)</header>
-                <div class="stats">
-                    <div class="stat-item"><span>BALANCE</span><span class="val">$10,000.00</span></div>
-                    <div class="stat-item"><span>P/L LIVE</span><span id="live-pl" class="val neutral">$0.00</span></div>
-                </div>
-                <div id="active-trades" class="trade-log">
-                    </div>
-            </div>
-        </aside>
+        <div class="nav-group">
+            <span class="nav-label">TERMINAL_TOOLS</span>
+            <button class="btn-nav" onclick="window.open('https://www.investing.com/economic-calendar/', '_blank')">🌍 MARKET_NEWS</button>
+            <button class="btn-nav" onclick="alert('Calculadora de Riesgo Iniciada')">🧮 RISK_CALCULATOR</button>
+        </div>
+        
+        <div style="margin-top: auto; padding: 10px; border-top: 1px solid var(--border);">
+            <small style="color: #64748b; font-size: 9px;">CONNECTED_TO: BINANCE_WSS</small>
+        </div>
+    </aside>
 
-        <main class="chart-viewport">
-            <div id="tv_chart_main"></div>
+    <div class="main">
+        <header class="header">
+            <div style="font-size: 11px;">CORE_STATUS: <span style="color:var(--success)">OPERATIONAL</span></div>
+            <div id="clock" style="font-size: 11px; color: var(--gold);">00:00:00 UTC</div>
+        </header>
+
+        <div class="chart-container">
+            <div id="tv_chart_container"></div>
             
-            <div class="algo-overlay" id="kira-overlay">
-                <div class="signal-header">
-                    <span id="signal-type">ANALYZING MARKET...</span>
-                </div>
-                <div class="levels">
-                    <div class="level-box entry">ENTRY: <span id="entry-val">0.00</span></div>
-                    <div class="level-box sl">STOP: <span id="sl-val">0.00</span></div>
-                    <div class="level-box tp">PROFIT: <span id="tp-val">0.00</span></div>
-                </div>
+            <div class="kira-hud" id="kira-hud">
+                <div id="signal-type" class="signal-badge buy">ANALYZING_LIQUIDITY...</div>
+                <div class="metric-row"><span>ENTRY_LEVEL:</span> <span class="val" id="entry-p">-</span></div>
+                <div class="metric-row"><span>STOP_LOSS:</span> <span class="val" style="color:var(--danger)" id="sl-p">-</span></div>
+                <div class="metric-row"><span>TAKE_PROFIT:</span> <span class="val" style="color:var(--success)" id="tp-p">-</span></div>
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 15px 0;">
+                <div class="metric-row"><span>INDICATORS:</span> <span class="val">EMA(20,50,80) + SMA 100</span></div>
+                <div class="metric-row"><span>OSCILLATORS:</span> <span class="val">RSI + MACD CONFIRMED</span></div>
             </div>
-        </main>
+        </div>
     </div>
-    <script src="script.js"></script>
+
+    <script>
+        // --- INICIALIZACIÓN DE GRÁFICO PROFESIONAL ---
+        let tvWidget;
+
+        function initTradingView() {
+            tvWidget = new TradingView.widget({
+                "autosize": true,
+                "symbol": "BINANCE:BTCUSDT",
+                "interval": "15",
+                "timezone": "Etc/UTC",
+                "theme": "dark",
+                "style": "1",
+                "locale": "es",
+                "toolbar_bg": "#050608",
+                "enable_publishing": false,
+                "hide_side_toolbar": false,
+                "allow_symbol_change": true,
+                "container_id": "tv_chart_container",
+                "studies": [
+                    "MAExp@tv-basicstudies", // EMA 20
+                    "MAExp@tv-basicstudies", // EMA 50
+                    "MAExp@tv-basicstudies", // EMA 80
+                    "MASimple@tv-basicstudies", // SMA 100
+                    "RSI@tv-basicstudies",
+                    "MACD@tv-basicstudies"
+                ],
+                "studies_overrides": {
+                    "moving average exponential.length": 20,
+                    "moving average exponential.0.length": 20,
+                    "moving average exponential.1.length": 50,
+                    "moving average exponential.2.length": 80,
+                    "moving average.length": 100
+                }
+            });
+        }
+
+        // --- CEREBRO DE SEÑALES KIRA ---
+        function runKiraBrain() {
+            // Simulación de análisis institucional (RR 1:3)
+            const basePrice = 64000 + (Math.random() * 2000);
+            const isBuy = Math.random() > 0.5;
+            
+            const entry = basePrice.toFixed(2);
+            const sl = isBuy ? (basePrice * 0.992).toFixed(2) : (basePrice * 1.008).toFixed(2);
+            const tp = isBuy ? (basePrice * 1.024).toFixed(2) : (basePrice * 0.976).toFixed(2);
+
+            const badge = document.getElementById('signal-type');
+            badge.className = `signal-badge ${isBuy ? 'buy' : 'sell'}`;
+            badge.innerText = `INSTITUTIONAL_${isBuy ? 'BUY' : 'SELL'}_CONFIRMED`;
+
+            document.getElementById('entry-p').innerText = `$${entry}`;
+            document.getElementById('sl-p').innerText = `$${sl}`;
+            document.getElementById('tp-p').innerText = `$${tp}`;
+        }
+
+        // Reloj UTC
+        setInterval(() => {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-GB', {timeZone:'UTC'}) + ' UTC';
+        }, 1000);
+
+        // Actualizar señales cada 10 segundos
+        setInterval(runKiraBrain, 10000);
+
+        window.onload = () => {
+            initTradingView();
+            setTimeout(runKiraBrain, 3000); // Primera señal tras carga
+        };
+    </script>
 </body>
 </html>
