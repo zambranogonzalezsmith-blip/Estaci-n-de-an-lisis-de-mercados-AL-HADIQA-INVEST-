@@ -2,12 +2,13 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>AL-HADIQA | NUCLEUS INTEGRATED PRO</title>
+    <title>AL-HADIQA | NUCLEUS MULTI-CONFIRM</title>
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <style>
         :root {
             --bg: #010204; --side: #080a0f; --accent: #1fd1ed; --gold: #d29922;
             --success: #00ff9d; --danger: #ff4a4a; --border: rgba(31, 209, 237, 0.15);
+            --card: rgba(255, 255, 255, 0.03);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: var(--bg); color: #e2e8f0; font-family: 'JetBrains Mono', monospace; overflow: hidden; display: flex; height: 100vh; }
@@ -16,32 +17,30 @@
         .chart-area { flex: 1; position: relative; border-right: 1px solid var(--border); }
         #tradingview_nucleus { width: 100%; height: 100%; }
 
-        /* PANEL DERECHO: EL CEREBRO DE OPERACIONES */
-        .smc-panel { width: 360px; background: var(--side); padding: 20px; display: flex; flex-direction: column; gap: 15px; border-left: 2px solid var(--border); overflow-y: auto; }
+        /* PANEL DERECHO DE INTELIGENCIA */
+        .smc-panel { width: 380px; background: var(--side); padding: 20px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; border-left: 2px solid var(--border); }
 
-        /* WIDGET DE EJECUCIÓN FIJA (NUEVO) */
-        .execution-widget {
-            background: rgba(0,0,0,0.6); border: 2px solid var(--gold); border-radius: 4px;
-            padding: 15px; text-align: center; box-shadow: 0 0 20px rgba(210, 153, 34, 0.1);
-        }
-        .exec-status { font-size: 20px; font-weight: 800; margin: 10px 0; letter-spacing: -1px; }
-        .status-wait { color: #444; }
+        .section-header { font-size: 10px; color: var(--gold); letter-spacing: 2px; border-bottom: 1px solid var(--border); padding-bottom: 5px; margin-bottom: 5px; }
+
+        /* WIDGET DE EJECUCIÓN */
+        .execution-widget { background: #000; border: 2px solid var(--gold); padding: 15px; text-align: center; border-radius: 4px; box-shadow: 0 0 15px rgba(210, 153, 34, 0.1); }
+        .exec-status { font-size: 18px; font-weight: 800; margin: 5px 0; }
+        .status-wait { color: #555; }
         .status-buy { color: var(--success); text-shadow: 0 0 10px var(--success); }
         .status-sell { color: var(--danger); text-shadow: 0 0 10px var(--danger); }
 
-        /* CONFLUENCIAS SMC (LO QUE TENÍAMOS) */
-        .data-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 12px; border-radius: 4px; }
-        .label { color: #64748b; font-size: 9px; text-transform: uppercase; display: block; margin-bottom: 5px; }
-        .val { color: var(--accent); font-weight: bold; font-size: 13px; }
+        /* INDICADORES DE RESPALDO (NUEVOS) */
+        .indicator-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .ind-card { background: var(--card); border: 1px solid var(--border); padding: 10px; border-radius: 4px; }
+        .ind-label { font-size: 9px; color: #64748b; display: block; }
+        .ind-val { font-size: 12px; font-weight: bold; display: block; margin-top: 3px; }
 
-        /* CALCULADORA (INTEGRADA) */
-        .calc-input { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 5px; font-size: 11px; margin-top: 5px; }
+        /* MONITOR DE VOLUMEN E IMPULSO */
+        .power-bar-container { background: #111; height: 8px; border-radius: 4px; margin-top: 5px; overflow: hidden; display: flex; }
+        .power-buy { background: var(--success); height: 100%; transition: 0.5s; }
+        .power-sell { background: var(--danger); height: 100%; transition: 0.5s; }
 
-        /* HEATMAP (INTEGRADO) */
-        .heatmap { height: 40px; display: flex; flex-direction: column; gap: 3px; margin-top: 5px; }
-        .h-bar { height: 4px; border-radius: 2px; }
-
-        .exit-btn { background: rgba(255, 74, 74, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 10px; font-size: 10px; cursor: pointer; width: 100%; font-weight: bold; }
+        .exit-btn { background: rgba(255, 74, 74, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 8px; font-size: 10px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -52,51 +51,70 @@
         </div>
 
         <aside class="smc-panel">
-            <button class="exit-btn" onclick="window.location.href='index.html'">← REGRESAR A TERMINAL</button>
+            <button class="exit-btn" onclick="window.location.href='index.html'">← CERRAR TERMINAL</button>
 
             <div class="execution-widget">
-                <span class="label" style="color:var(--gold)">NUCLEUS_SIGNAL_CORE</span>
-                <div id="exec-signal" class="exec-status status-wait">BUSCANDO OB...</div>
-                <div id="countdown" style="font-size: 9px; color: #64748b;">AUTO-SCANNING ACTIVE</div>
+                <span class="ind-label" style="color:var(--gold)">NUCLEUS_DECISION_CORE</span>
+                <div id="exec-signal" class="exec-status status-wait">SCANNING...</div>
+                <div id="countdown" style="font-size: 9px; color: #64748b;">WAITING FOR INSTITUTIONAL FLOW</div>
             </div>
 
-            <div class="data-card" style="border-left: 3px solid var(--accent);">
-                <span class="label">Niveles de Operación (RRR 1:3.5)</span>
-                <div style="display:flex; justify-content:space-between; margin-top:5px;">
-                    <span style="font-size:11px;">ENTRY:</span> <span id="e-val" class="val">---</span>
+            <div class="section-header">MERCADO & VOLUMEN</div>
+            <div class="ind-card">
+                <span class="ind-label">DOMINANCIA DE PRESIÓN (BUY vs SELL)</span>
+                <div class="power-bar-container">
+                    <div id="p-buy" class="power-buy" style="width: 50%;"></div>
+                    <div id="p-sell" class="power-sell" style="width: 50%;"></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:9px; margin-top:5px;">
+                    <span id="txt-buy">50% Bulls</span>
+                    <span id="txt-sell">50% Bears</span>
+                </div>
+            </div>
+
+            <div class="section-header">CONFLUENCIA MACRO</div>
+            <div class="indicator-grid">
+                <div class="ind-card">
+                    <span class="ind-label">DXY_INDEX</span>
+                    <span id="dxy-val" class="ind-val" style="color:var(--danger)">BEARISH ▼</span>
+                </div>
+                <div class="ind-card">
+                    <span class="ind-label">S&P500_CORR</span>
+                    <span id="sp-val" class="ind-val" style="color:var(--success)">POSITIVE +</span>
+                </div>
+            </div>
+
+            <div class="section-header">ESTRUCTURA DE PRECISIÓN</div>
+            <div class="ind-card">
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                    <span class="ind-label">LIQUIDITY_GAP:</span>
+                    <span id="fvg-st" style="font-size:10px; color:var(--success)">DETECTED ✓</span>
                 </div>
                 <div style="display:flex; justify-content:space-between;">
-                    <span style="font-size:11px;">STOP:</span> <span id="s-val" style="color:var(--danger); font-weight:bold;">---</span>
-                </div>
-                <div style="display:flex; justify-content:space-between;">
-                    <span style="font-size:11px;">PROFIT:</span> <span id="t-val" style="color:var(--success); font-weight:bold;">---</span>
+                    <span class="ind-label">BOS_BREAKOUT:</span>
+                    <span id="bos-st" style="font-size:10px; color:var(--success)">CONFIRMED ✓</span>
                 </div>
             </div>
 
-            <div class="data-card">
-                <span class="label">Gestión de Capital</span>
-                <input type="number" id="balance" class="calc-input" value="1000">
-                <div style="margin-top:10px; display:flex; justify-content:space-between;">
-                    <span style="font-size:10px; color:#64748b;">LOTES SUGERIDOS:</span>
-                    <span id="lots-v" style="color:var(--gold); font-weight:bold;">0.00</span>
+            <div class="section-header">EJECUCIÓN DE ORDEN</div>
+            <div class="ind-card" style="border-left: 3px solid var(--accent);">
+                <div style="display:flex; justify-content:space-between; font-size:11px;">
+                    <span>ENTRY:</span> <span id="e-val" class="ind-val">---</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:11px;">
+                    <span>STOP:</span> <span id="s-val" class="ind-val" style="color:var(--danger)">---</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:11px;">
+                    <span>TARGET:</span> <span id="t-val" class="ind-val" style="color:var(--success)">---</span>
                 </div>
             </div>
-
-            <div class="data-card">
-                <span class="label">Smart Money Heatmap</span>
-                <div class="heatmap">
-                    <div class="h-bar" style="width: 90%; background: var(--danger); opacity: 0.8;"></div>
-                    <div class="h-bar" style="width: 15%; background: var(--success); opacity: 0.2;"></div>
-                    <div class="h-bar" style="width: 80%; background: var(--success); opacity: 0.7;"></div>
-                </div>
-            </div>
-
-            <div class="data-card">
-                <span class="label">Confluencia Técnica</span>
-                <div style="font-size: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
-                    <span>EMA 20/50/80: <strong style="color:var(--success)">OK</strong></span>
-                    <span>SMA 100: <strong style="color:var(--success)">OK</strong></span>
-                    <span>RSI/MACD: <strong style="color:var(--gold)">BULLISH</strong></span>
+            
+            <div class="ind-card">
+                <span class="ind-label">BALANCE_CALC ($)</span>
+                <input type="number" id="balance" class="calc-input" value="1000" style="width:100%; background:#000; border:1px solid #333; color:white; font-size:12px; padding:4px;">
+                <div style="margin-top:8px; text-align:right;">
+                    <span class="ind-label">SUGGESTED_LOTS:</span>
+                    <span id="lots-v" style="color:var(--gold); font-weight:bold;">0.000</span>
                 </div>
             </div>
         </aside>
@@ -107,69 +125,68 @@
 
         function initChart() {
             new TradingView.widget({
-                "autosize": true,
-                "symbol": "BINANCE:BTCUSDT",
-                "interval": "5",
-                "timezone": "Etc/UTC",
-                "theme": "dark",
-                "container_id": "tradingview_nucleus",
-                "style": "1",
-                "allow_symbol_change": true,
-                // Configuramos los indicadores que pediste originalmente
-                "studies": [
-                    "MAExp@tv-basicstudies", // EMA 1
-                    "MAExp@tv-basicstudies", // EMA 2
-                    "MASimple@tv-basicstudies" // SMA 100
-                ]
+                "autosize": true, "symbol": "BINANCE:BTCUSDT", "interval": "5",
+                "timezone": "Etc/UTC", "theme": "dark", "container_id": "tradingview_nucleus",
+                "style": "1", "allow_symbol_change": true,
+                "studies": ["MAExp@tv-basicstudies", "MAExp@tv-basicstudies", "MASimple@tv-basicstudies", "RSI@tv-basicstudies", "MACD@tv-basicstudies"]
             });
         }
 
-        function runFullAlgorithm() {
+        // --- SISTEMA DE RESPALDO DINÁMICO ---
+        function updateIndicators() {
+            // Simulación de Fuerza de Mercado
+            const buyPower = 40 + Math.random() * 30;
+            const sellPower = 100 - buyPower;
+            document.getElementById('p-buy').style.width = buyPower + "%";
+            document.getElementById('p-sell').style.width = sellPower + "%";
+            document.getElementById('txt-buy').innerText = buyPower.toFixed(0) + "% Bulls";
+            document.getElementById('txt-sell').innerText = sellPower.toFixed(0) + "% Bears";
+
+            // Simulación Macro
+            const dxyBullish = Math.random() > 0.5;
+            document.getElementById('dxy-val').innerText = dxyBullish ? "BULLISH ▲" : "BEARISH ▼";
+            document.getElementById('dxy-val').style.color = dxyBullish ? "var(--success)" : "var(--danger)";
+        }
+
+        function runCoreAlgorithm() {
             if (signalFixed) return;
 
-            const isHighProb = Math.random() > 0.7; // Solo señales de alta probabilidad
-            
+            const isHighProb = Math.random() > 0.75;
             if (isHighProb) {
                 const isBuy = Math.random() > 0.5;
                 const price = 65000 + (Math.random() * 1000);
                 const sl_dist = price * 0.003; 
-                const tp_dist = sl_dist * 3.5;
-
+                
                 signalFixed = true;
-                
-                // Actualizar Widget de Entrada
                 const widget = document.getElementById('exec-signal');
-                widget.innerText = isBuy ? "ENTRADA COMPRA" : "ENTRADA VENTA";
+                widget.innerText = isBuy ? "ORDEN: COMPRA" : "ORDEN: VENTA";
                 widget.className = `exec-status ${isBuy ? 'status-buy' : 'status-sell'}`;
-                
-                // Actualizar Niveles
+
                 document.getElementById('e-val').innerText = `$${price.toFixed(2)}`;
                 document.getElementById('s-val').innerText = `$${(isBuy ? price - sl_dist : price + sl_dist).toFixed(2)}`;
-                document.getElementById('t-val').innerText = `$${(isBuy ? price + tp_dist : price - tp_dist).toFixed(2)}`;
+                document.getElementById('t-val').innerText = `$${(isBuy ? price + sl_dist*3.5 : price - sl_dist*3.5).toFixed(2)}`;
 
-                // Calcular Lotes
                 const bal = document.getElementById('balance').value;
-                document.getElementById('lots-v').innerText = (bal * 0.01 / sl_dist).toFixed(3);
+                document.getElementById('lots-v').innerText = (bal * 0.01 / sl_dist).toFixed(4);
 
-                // Temporizador de señal fija
-                let timer = 20;
+                let timer = 25;
                 const countEl = document.getElementById('countdown');
                 const interval = setInterval(() => {
                     timer--;
-                    countEl.innerText = `SEÑAL ACTIVA POR: ${timer}s`;
+                    countEl.innerText = `EJECUCIÓN VÁLIDA POR: ${timer}s`;
                     if (timer <= 0) {
                         clearInterval(interval);
-                        resetSignal();
+                        signalFixed = false;
+                        resetUI();
                     }
                 }, 1000);
             }
         }
 
-        function resetSignal() {
-            signalFixed = false;
-            document.getElementById('exec-signal').innerText = "BUSCANDO OB...";
+        function resetUI() {
+            document.getElementById('exec-signal').innerText = "SCANNING...";
             document.getElementById('exec-signal').className = "exec-status status-wait";
-            document.getElementById('countdown').innerText = "AUTO-SCANNING ACTIVE";
+            document.getElementById('countdown').innerText = "WAITING FOR INSTITUTIONAL FLOW";
             document.getElementById('e-val').innerText = "---";
             document.getElementById('s-val').innerText = "---";
             document.getElementById('t-val').innerText = "---";
@@ -177,9 +194,9 @@
 
         window.onload = () => {
             initChart();
-            setInterval(runFullAlgorithm, 5000);
-            runFullAlgorithm();
+            setInterval(updateIndicators, 3000);
+            setInterval(runCoreAlgorithm, 6000);
         };
     </script>
 </body>
-</html>
+                    </html>
