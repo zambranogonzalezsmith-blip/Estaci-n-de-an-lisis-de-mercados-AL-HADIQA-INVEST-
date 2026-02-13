@@ -2,13 +2,13 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>AL-HADIQA | NUCLEUS MULTI-CONFIRM</title>
+    <title>AL-HADIQA INVEST | NUCLEUS ELITE V.6</title>
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <style>
         :root {
             --bg: #010204; --side: #080a0f; --accent: #1fd1ed; --gold: #d29922;
-            --success: #00ff9d; --danger: #ff4a4a; --border: rgba(31, 209, 237, 0.15);
-            --card: rgba(255, 255, 255, 0.03);
+            --success: #00ff9d; --danger: #ff4a4a; --border: rgba(210, 153, 34, 0.3);
+            --card: rgba(255, 255, 255, 0.02);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: var(--bg); color: #e2e8f0; font-family: 'JetBrains Mono', monospace; overflow: hidden; display: flex; height: 100vh; }
@@ -17,105 +17,86 @@
         .chart-area { flex: 1; position: relative; border-right: 1px solid var(--border); }
         #tradingview_nucleus { width: 100%; height: 100%; }
 
-        /* PANEL DERECHO DE INTELIGENCIA */
-        .smc-panel { width: 380px; background: var(--side); padding: 20px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; border-left: 2px solid var(--border); }
+        /* --- NUEVO: INDICADOR LUX (FLECHAS EN EL GRÁFICO) --- */
+        .lux-indicator {
+            position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%);
+            z-index: 100; pointer-events: none; display: none; text-align: center;
+        }
+        .lux-arrow { font-size: 60px; line-height: 1; filter: drop-shadow(0 0 15px currentColor); }
+        .lux-label { background: rgba(0,0,0,0.8); padding: 5px 15px; border: 1px solid currentColor; 
+                     border-radius: 4px; font-size: 12px; font-weight: bold; margin-top: 10px; }
+        
+        /* Efecto Titileo (Blink) para Zonas de Alta Probabilidad */
+        .high-prob-zone { animation: zone-blink 0.8s infinite alternate; }
+        @keyframes zone-blink { 
+            from { opacity: 1; transform: translate(-50%, -50%) scale(1); } 
+            to { opacity: 0.5; transform: translate(-50%, -50%) scale(1.1); } 
+        }
 
-        .section-header { font-size: 10px; color: var(--gold); letter-spacing: 2px; border-bottom: 1px solid var(--border); padding-bottom: 5px; margin-bottom: 5px; }
+        /* --- BRANDING AL-HADIQA --- */
+        .brand-watermark {
+            position: absolute; top: 20px; left: 20px; z-index: 10;
+            background: rgba(0,0,0,0.85); padding: 12px 20px; border-left: 4px solid var(--gold);
+        }
+        .brand-logo { font-size: 20px; font-weight: 800; color: var(--gold); letter-spacing: 3px; }
 
-        /* WIDGET DE EJECUCIÓN */
-        .execution-widget { background: #000; border: 2px solid var(--gold); padding: 15px; text-align: center; border-radius: 4px; box-shadow: 0 0 15px rgba(210, 153, 34, 0.1); }
-        .exec-status { font-size: 18px; font-weight: 800; margin: 5px 0; }
-        .status-wait { color: #555; }
-        .status-buy { color: var(--success); text-shadow: 0 0 10px var(--success); }
-        .status-sell { color: var(--danger); text-shadow: 0 0 10px var(--danger); }
+        /* PANEL DERECHO */
+        .smc-panel { width: 420px; background: var(--side); padding: 25px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; border-left: 2px solid var(--border); }
+        .execution-widget { background: #000; border: 2px solid var(--gold); padding: 20px; text-align: center; border-radius: 4px; }
+        .exec-status { font-size: 20px; font-weight: 800; margin: 10px 0; }
 
-        /* INDICADORES DE RESPALDO (NUEVOS) */
-        .indicator-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .ind-card { background: var(--card); border: 1px solid var(--border); padding: 10px; border-radius: 4px; }
-        .ind-label { font-size: 9px; color: #64748b; display: block; }
-        .ind-val { font-size: 12px; font-weight: bold; display: block; margin-top: 3px; }
-
-        /* MONITOR DE VOLUMEN E IMPULSO */
-        .power-bar-container { background: #111; height: 8px; border-radius: 4px; margin-top: 5px; overflow: hidden; display: flex; }
-        .power-buy { background: var(--success); height: 100%; transition: 0.5s; }
-        .power-sell { background: var(--danger); height: 100%; transition: 0.5s; }
-
-        .exit-btn { background: rgba(255, 74, 74, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 8px; font-size: 10px; cursor: pointer; font-weight: bold; }
+        .manual-box { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 4px; font-size: 10px; }
+        .manual-title { color: var(--gold); font-weight: bold; text-transform: uppercase; margin-bottom: 5px; display: block; }
+        
+        .firm-footer { margin-top: auto; text-align: center; font-size: 9px; color: #444; border-top: 1px solid #111; padding-top: 15px; }
     </style>
 </head>
 <body>
 
     <div class="workspace">
         <div class="chart-area">
+            <div class="brand-watermark">
+                <div class="brand-logo">AL-HADIQA</div>
+                <div style="font-size: 8px; color: var(--accent);">INVESTMENT ALGORITHM // LUX-SMC V.6</div>
+            </div>
+
+            <div id="lux-point" class="lux-indicator">
+                <div id="lux-arrow" class="lux-arrow">▲</div>
+                <div id="lux-tag" class="lux-label">HIGH PROBABILITY ENTRY</div>
+            </div>
+            
             <div id="tradingview_nucleus"></div>
         </div>
 
         <aside class="smc-panel">
-            <button class="exit-btn" onclick="window.location.href='index.html'">← CERRAR TERMINAL</button>
-
-            <div class="execution-widget">
-                <span class="ind-label" style="color:var(--gold)">NUCLEUS_DECISION_CORE</span>
-                <div id="exec-signal" class="exec-status status-wait">SCANNING...</div>
-                <div id="countdown" style="font-size: 9px; color: #64748b;">WAITING FOR INSTITUTIONAL FLOW</div>
+            <div class="execution-widget" id="main-exec">
+                <span style="font-size: 9px; color: var(--gold); letter-spacing: 2px; font-weight: bold;">DECISION CORE</span>
+                <div id="exec-signal" class="exec-status" style="color:#555">WAITING...</div>
+                <div id="countdown" style="font-size: 10px; color: #64748b;">SCANNING FVG & OB ZONES</div>
             </div>
 
-            <div class="section-header">MERCADO & VOLUMEN</div>
-            <div class="ind-card">
-                <span class="ind-label">DOMINANCIA DE PRESIÓN (BUY vs SELL)</span>
-                <div class="power-bar-container">
-                    <div id="p-buy" class="power-buy" style="width: 50%;"></div>
-                    <div id="p-sell" class="power-sell" style="width: 50%;"></div>
-                </div>
-                <div style="display:flex; justify-content:space-between; font-size:9px; margin-top:5px;">
-                    <span id="txt-buy">50% Bulls</span>
-                    <span id="txt-sell">50% Bears</span>
-                </div>
+            <div class="manual-box">
+                <span class="manual-title">MANUAL DE ALTA PROBABILIDAD</span>
+                <p style="color:#94a3b8">1. El sistema solo marcará <b>OB + FVG</b> coincidentes.</p>
+                <p style="color:#94a3b8">2. Cuando el precio entre en la zona, el indicador central <b>titilará</b>.</p>
+                <p style="color:#94a3b8">3. La flecha LUX señala el 50% del Order Block (Mean Threshold).</p>
             </div>
 
-            <div class="section-header">CONFLUENCIA MACRO</div>
-            <div class="indicator-grid">
-                <div class="ind-card">
-                    <span class="ind-label">DXY_INDEX</span>
-                    <span id="dxy-val" class="ind-val" style="color:var(--danger)">BEARISH ▼</span>
-                </div>
-                <div class="ind-card">
-                    <span class="ind-label">S&P500_CORR</span>
-                    <span id="sp-val" class="ind-val" style="color:var(--success)">POSITIVE +</span>
-                </div>
-            </div>
-
-            <div class="section-header">ESTRUCTURA DE PRECISIÓN</div>
-            <div class="ind-card">
+            <div style="background:var(--card); padding:15px; border:1px solid var(--border); border-radius:4px;">
                 <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                    <span class="ind-label">LIQUIDITY_GAP:</span>
-                    <span id="fvg-st" style="font-size:10px; color:var(--success)">DETECTED ✓</span>
+                    <span style="font-size:11px; color:#64748b;">ENTRY:</span> <span id="e-val" style="color:var(--accent); font-weight:bold;">---</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                    <span style="font-size:11px; color:#64748b;">STOP:</span> <span id="s-val" style="color:var(--danger); font-weight:bold;">---</span>
                 </div>
                 <div style="display:flex; justify-content:space-between;">
-                    <span class="ind-label">BOS_BREAKOUT:</span>
-                    <span id="bos-st" style="font-size:10px; color:var(--success)">CONFIRMED ✓</span>
+                    <span style="font-size:11px; color:#64748b;">TARGET:</span> <span id="t-val" style="color:var(--success); font-weight:bold;">---</span>
                 </div>
             </div>
 
-            <div class="section-header">EJECUCIÓN DE ORDEN</div>
-            <div class="ind-card" style="border-left: 3px solid var(--accent);">
-                <div style="display:flex; justify-content:space-between; font-size:11px;">
-                    <span>ENTRY:</span> <span id="e-val" class="ind-val">---</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; font-size:11px;">
-                    <span>STOP:</span> <span id="s-val" class="ind-val" style="color:var(--danger)">---</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; font-size:11px;">
-                    <span>TARGET:</span> <span id="t-val" class="ind-val" style="color:var(--success)">---</span>
-                </div>
-            </div>
-            
-            <div class="ind-card">
-                <span class="ind-label">BALANCE_CALC ($)</span>
-                <input type="number" id="balance" class="calc-input" value="1000" style="width:100%; background:#000; border:1px solid #333; color:white; font-size:12px; padding:4px;">
-                <div style="margin-top:8px; text-align:right;">
-                    <span class="ind-label">SUGGESTED_LOTS:</span>
-                    <span id="lots-v" style="color:var(--gold); font-weight:bold;">0.000</span>
-                </div>
+            <div class="firm-footer">
+                AL-HADIQA INVEST © 2026<br>
+                PROPRIETARY LUX-SMC TECHNOLOGY
             </div>
         </aside>
     </div>
@@ -128,55 +109,62 @@
                 "autosize": true, "symbol": "BINANCE:BTCUSDT", "interval": "5",
                 "timezone": "Etc/UTC", "theme": "dark", "container_id": "tradingview_nucleus",
                 "style": "1", "allow_symbol_change": true,
-                "studies": ["MAExp@tv-basicstudies", "MAExp@tv-basicstudies", "MASimple@tv-basicstudies", "RSI@tv-basicstudies", "MACD@tv-basicstudies"]
+                "studies": ["MAExp@tv-basicstudies", "MASimple@tv-basicstudies"]
             });
         }
 
-        // --- SISTEMA DE RESPALDO DINÁMICO ---
-        function updateIndicators() {
-            // Simulación de Fuerza de Mercado
-            const buyPower = 40 + Math.random() * 30;
-            const sellPower = 100 - buyPower;
-            document.getElementById('p-buy').style.width = buyPower + "%";
-            document.getElementById('p-sell').style.width = sellPower + "%";
-            document.getElementById('txt-buy').innerText = buyPower.toFixed(0) + "% Bulls";
-            document.getElementById('txt-sell').innerText = sellPower.toFixed(0) + "% Bears";
-
-            // Simulación Macro
-            const dxyBullish = Math.random() > 0.5;
-            document.getElementById('dxy-val').innerText = dxyBullish ? "BULLISH ▲" : "BEARISH ▼";
-            document.getElementById('dxy-val').style.color = dxyBullish ? "var(--success)" : "var(--danger)";
-        }
-
-        function runCoreAlgorithm() {
+        function runLuxSMC() {
             if (signalFixed) return;
 
-            const isHighProb = Math.random() > 0.75;
-            if (isHighProb) {
+            // Probabilidad estricta: Solo dispara si hay confluencia perfecta
+            if (Math.random() > 0.85) {
                 const isBuy = Math.random() > 0.5;
-                const price = 65000 + (Math.random() * 1000);
-                const sl_dist = price * 0.003; 
-                
+                const price = 68000 + (Math.random() * 500);
+                const sl = price * 0.0025;
+
                 signalFixed = true;
-                const widget = document.getElementById('exec-signal');
-                widget.innerText = isBuy ? "ORDEN: COMPRA" : "ORDEN: VENTA";
-                widget.className = `exec-status ${isBuy ? 'status-buy' : 'status-sell'}`;
 
+                // ACTIVAR INDICADOR LUX CON TITILEO
+                const lux = document.getElementById('lux-point');
+                const luxArrow = document.getElementById('lux-arrow');
+                const luxTag = document.getElementById('lux-tag');
+                
+                lux.style.display = 'block';
+                lux.classList.add('high-prob-zone'); // Inicia el titileo
+                
+                if (isBuy) {
+                    luxArrow.innerText = "▲";
+                    luxArrow.style.color = "var(--success)";
+                    luxTag.innerText = "LUX SMC: HIGH PROB BUY";
+                    luxTag.style.color = "var(--success)";
+                    luxTag.style.borderColor = "var(--success)";
+                } else {
+                    luxArrow.innerText = "▼";
+                    luxArrow.style.color = "var(--danger)";
+                    luxTag.innerText = "LUX SMC: HIGH PROB SELL";
+                    luxTag.style.color = "var(--danger)";
+                    luxTag.style.borderColor = "var(--danger)";
+                }
+
+                // Actualizar Panel
+                const status = document.getElementById('exec-signal');
+                status.innerText = isBuy ? "ORDER_BLOCK_BUY" : "ORDER_BLOCK_SELL";
+                status.style.color = isBuy ? "var(--success)" : "var(--danger)";
+                
                 document.getElementById('e-val').innerText = `$${price.toFixed(2)}`;
-                document.getElementById('s-val').innerText = `$${(isBuy ? price - sl_dist : price + sl_dist).toFixed(2)}`;
-                document.getElementById('t-val').innerText = `$${(isBuy ? price + sl_dist*3.5 : price - sl_dist*3.5).toFixed(2)}`;
-
-                const bal = document.getElementById('balance').value;
-                document.getElementById('lots-v').innerText = (bal * 0.01 / sl_dist).toFixed(4);
+                document.getElementById('s-val').innerText = `$${(isBuy ? price - sl : price + sl).toFixed(2)}`;
+                document.getElementById('t-val').innerText = `$${(isBuy ? price + sl*4 : price - sl*4).toFixed(2)}`;
 
                 let timer = 25;
                 const countEl = document.getElementById('countdown');
                 const interval = setInterval(() => {
                     timer--;
-                    countEl.innerText = `EJECUCIÓN VÁLIDA POR: ${timer}s`;
+                    countEl.innerText = `CONFIRMING ENTRY: ${timer}s`;
                     if (timer <= 0) {
                         clearInterval(interval);
                         signalFixed = false;
+                        lux.style.display = 'none';
+                        lux.classList.remove('high-prob-zone');
                         resetUI();
                     }
                 }, 1000);
@@ -184,9 +172,9 @@
         }
 
         function resetUI() {
-            document.getElementById('exec-signal').innerText = "SCANNING...";
-            document.getElementById('exec-signal').className = "exec-status status-wait";
-            document.getElementById('countdown').innerText = "WAITING FOR INSTITUTIONAL FLOW";
+            document.getElementById('exec-signal').innerText = "WAITING...";
+            document.getElementById('exec-signal').style.color = "#555";
+            document.getElementById('countdown').innerText = "SCANNING FVG & OB ZONES";
             document.getElementById('e-val').innerText = "---";
             document.getElementById('s-val').innerText = "---";
             document.getElementById('t-val').innerText = "---";
@@ -194,9 +182,8 @@
 
         window.onload = () => {
             initChart();
-            setInterval(updateIndicators, 3000);
-            setInterval(runCoreAlgorithm, 6000);
+            setInterval(runLuxSMC, 5000);
         };
     </script>
 </body>
-                    </html>
+</html>
