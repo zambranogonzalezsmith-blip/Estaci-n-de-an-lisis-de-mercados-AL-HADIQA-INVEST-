@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>NUCLEUS | SMC EXPERT ALGORITHM</title>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <style>
+        :root {
+            --bg: #020408; --side: #0a0c12; --accent: #1fd1ed; --gold: #d29922;
+            --success: #00ff9d; --danger: #ff4a4a; --border: rgba(31, 209, 237, 0.1);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            background: var(--bg); color: #e2e8f0; 
+            font-family: 'JetBrains Mono', monospace; 
+            overflow: hidden; display: flex; height: 100vh; 
+        }
+
+        /* Volver al Index */
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 1000;
+            background: var(--side); border: 1px solid var(--accent);
+            color: var(--accent); padding: 8px 15px; cursor: pointer; font-size: 10px;
+        }
+
+        .workspace { display: flex; width: 100%; height: 100%; }
+        
+        /* Gráfico Principal */
+        .chart-area { flex: 1; position: relative; border-right: 1px solid var(--border); }
+        #tradingview_nucleus { width: 100%; height: 100%; }
+
+        /* Panel de Control SMC */
+        .smc-panel { width: 320px; background: var(--side); padding: 20px; display: flex; flex-direction: column; }
+        
+        .session-info { 
+            padding: 10px; border: 1px solid var(--gold); color: var(--gold); 
+            font-size: 11px; text-align: center; margin-bottom: 20px;
+        }
+
+        .data-card {
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+            padding: 15px; border-radius: 4px; margin-bottom: 15px;
+        }
+
+        .label { color: #64748b; font-size: 10px; display: block; margin-bottom: 5px; }
+        .value { color: var(--accent); font-size: 14px; font-weight: bold; }
+
+        /* HUD Flotante sobre el gráfico */
+        .algo-hud {
+            position: absolute; top: 20px; right: 20px; width: 260px;
+            background: rgba(10, 12, 18, 0.9); border: 1px solid var(--accent);
+            padding: 15px; backdrop-filter: blur(10px); z-index: 100;
+        }
+
+        .entry-line { border-left: 3px solid var(--accent); padding-left: 10px; margin-bottom: 10px; }
+        .sl-line { border-left: 3px solid var(--danger); padding-left: 10px; margin-bottom: 10px; }
+        .tp-line { border-left: 3px solid var(--success); padding-left: 10px; }
+    </style>
+</head>
+<body>
+
+    <button class="back-btn" onclick="window.location.href='index.html'">← REGRESAR A TERMINAL</button>
+
+    <div class="workspace">
+        <div class="chart-area">
+            <div id="tradingview_nucleus"></div>
+            
+            <div class="algo-hud">
+                <small style="color:var(--accent)">NUCLEUS_V1_SMC</small>
+                <div style="margin: 15px 0;">
+                    <div class="entry-line"><span class="label">LIMIT_ENTRY</span><span id="entry-price" class="value">0.00</span></div>
+                    <div class="sl-line"><span class="label">STOP_LOSS</span><span id="sl-price" class="value" style="color:var(--danger)">0.00</span></div>
+                    <div class="tp-line"><span class="label">TAKE_PROFIT</span><span id="tp-price" class="value" style="color:var(--success)">0.00</span></div>
+                </div>
+                <div id="signal-status" style="font-size: 10px; text-align: center; color: var(--gold);">BUSCANDO ORDER BLOCKS...</div>
+            </div>
+        </div>
+
+        <aside class="smc-panel">
+            <div class="session-info" id="current-session">DETECTANDO SESIÓN...</div>
+
+            <div class="data-card">
+                <span class="label">ALGO_MODE</span>
+                <span class="value">INSTITUTIONAL_SMC</span>
+            </div>
+
+            <div class="data-card">
+                <span class="label">DEMO_EQUITY</span>
+                <span class="value" style="color:var(--success)">$10,000.00</span>
+            </div>
+
+            <div class="data-card">
+                <span class="label">LIVE_VOLATILITY</span>
+                <span id="volatility" class="value">0.00%</span>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        // 1. Cargar Gráfico Especializado
+        function loadNucleusChart() {
+            new TradingView.widget({
+                "autosize": true,
+                "symbol": "BINANCE:BTCUSDT",
+                "interval": "5", // Temporalidad menor para SMC
+                "timezone": "Etc/UTC",
+                "theme": "dark",
+                "style": "1",
+                "container_id": "tradingview_nucleus",
+                "hide_side_toolbar": false,
+                "studies": [
+                    "STD;Bollinger_Bands",
+                    "STD;RSI"
+                ]
+            });
+        }
+
+        // 2. Lógica de Sesiones
+        function checkSession() {
+            const h = new Date().getUTCHours();
+            const s = document.getElementById('current-session');
+            if (h >= 8 && h <= 12) s.innerText = "SESIÓN: NEW YORK (GOLDEN TIME)";
+            else if (h >= 2 && h <= 10) s.innerText = "SESIÓN: LONDON (HIGH VOLUME)";
+            else s.innerText = "SESIÓN: ASIA (CONSOLIDATION)";
+        }
+
+        // 3. Simulación de Algoritmo SMC (Cálculo de niveles)
+        function runSMCScanner() {
+            const price = 60000 + (Math.random() * 5000);
+            const isBuy = Math.random() > 0.5;
+
+            document.getElementById('entry-price').innerText = `$${price.toFixed(2)}`;
+            document.getElementById('sl-price').innerText = `$${(isBuy ? price * 0.994 : price * 1.006).toFixed(2)}`;
+            document.getElementById('tp-price').innerText = `$${(isBuy ? price * 1.018 : price * 0.982).toFixed(2)}`;
+            
+            document.getElementById('signal-status').innerText = isBuy ? "ORDER BLOCK ALCISTA DETECTADO" : "LIQUIDEZ BAJISTA IDENTIFICADA";
+            document.getElementById('volatility').innerText = (Math.random() * 2).toFixed(2) + "%";
+        }
+
+        window.onload = () => {
+            loadNucleusChart();
+            checkSession();
+            setInterval(runSMCScanner, 8000);
+            runSMCScanner();
+        };
+    </script>
+</body>
+</html>
