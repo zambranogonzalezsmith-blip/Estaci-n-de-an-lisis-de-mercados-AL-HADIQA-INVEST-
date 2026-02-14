@@ -9,29 +9,42 @@
             --bg: #050505; --panel: #0b0d11; --gold: #d4af37; --cyan: #00f2ea;
             --win: #00e676; --loss: #ff1744; --border: rgba(212, 175, 55, 0.3);
             --card-bg: rgba(255,255,255,0.03);
-            --nav-bg: #020202;
+            --nav-bg: #000000;
         }
         * { box-sizing: border-box; font-family: 'JetBrains Mono', monospace; margin: 0; padding: 0; }
-        body { background: var(--bg); color: #cfd8dc; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* ESTRUCTURA PRINCIPAL */
+        body { 
+            background: var(--bg); color: #cfd8dc; height: 100vh; width: 100vw;
+            display: flex; flex-direction: column; overflow: hidden; 
+        }
 
-        /* --- NUEVO MENÚ DE NAVEGACIÓN SUPERIOR --- */
+        /* --- MENÚ DE NAVEGACIÓN SUPERIOR (VISIBILIDAD FORZADA) --- */
         .global-nav {
-            height: 35px; width: 100%; background: var(--nav-bg); 
-            border-bottom: 1px solid #333; display: flex; align-items: center; 
-            padding: 0 15px; gap: 20px; z-index: 1000;
+            height: 40px; /* Altura fija */
+            width: 100%; 
+            background: var(--nav-bg); 
+            border-bottom: 1px solid var(--gold); /* Borde dorado visible */
+            display: flex; align-items: center; 
+            padding: 0 15px; gap: 20px; 
+            flex-shrink: 0; /* IMPIDE QUE DESAPAREZCA */
+            position: relative; z-index: 9999;
         }
-        .nav-brand { color: var(--gold); font-weight: 900; font-size: 11px; margin-right: 15px; letter-spacing: 1px; }
+        .nav-brand { color: var(--gold); font-weight: 900; font-size: 12px; margin-right: 15px; letter-spacing: 1px; }
         .nav-link { 
-            text-decoration: none; color: #666; font-size: 10px; font-weight: bold; 
-            text-transform: uppercase; transition: 0.3s; padding: 5px 10px; border-radius: 2px;
+            text-decoration: none; color: #888; font-size: 11px; font-weight: bold; 
+            text-transform: uppercase; transition: 0.3s; padding: 5px 10px; border-radius: 2px; border: 1px solid transparent;
         }
-        .nav-link:hover { color: #fff; background: rgba(255,255,255,0.05); }
-        .nav-link.active { color: var(--cyan); background: rgba(0, 242, 234, 0.1); border: 1px solid rgba(0, 242, 234, 0.2); }
+        .nav-link:hover { color: #fff; background: rgba(255,255,255,0.1); border-color: #444; }
+        .nav-link.active { 
+            color: var(--cyan); background: rgba(0, 242, 234, 0.1); 
+            border: 1px solid var(--cyan); box-shadow: 0 0 10px rgba(0, 242, 234, 0.1);
+        }
 
         /* --- DASHBOARD SUPERIOR (45% ALTURA) --- */
         .top-dashboard { 
             height: 420px; background: var(--panel); border-bottom: 2px solid var(--border); 
-            display: flex; padding: 10px; gap: 10px; overflow-x: auto; 
+            display: flex; padding: 10px; gap: 10px; overflow-x: auto; flex-shrink: 0;
         }
 
         .dash-col { 
@@ -74,7 +87,7 @@
         .result-row { display: flex; justify-content: space-between; font-size: 11px; padding: 4px 0; border-bottom: 1px solid #222; }
 
         /* --- GRÁFICO INFERIOR --- */
-        .bottom-chart { flex: 1; position: relative; background: #000; }
+        .bottom-chart { flex: 1; position: relative; background: #000; overflow: hidden; }
         
         /* OVERLAYS (CAPAS) */
         .overlay-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; display: none; }
@@ -100,8 +113,8 @@
     <nav class="global-nav">
         <span class="nav-brand">AL-HADIQA OS</span>
         <a href="alhadiqa-terminal-main.html" class="nav-link">📁 MAIN TERMINAL</a>
-        <a href="nucleus-smc-v11-ultimate.html" class="nav-link active">📊 CRYPTO SMC (V.11)</a>
-        <a href="nucleus-fx-elite-v12.html" class="nav-link">🌐 FOREX ELITE (V.12)</a>
+        <a href="nucleus-smc-v11-ultimate.html" class="nav-link active">📊 CRYPTO SMC V.11</a>
+        <a href="nucleus-fx-elite-v12.html" class="nav-link">🌐 FOREX ELITE V.12</a>
     </nav>
 
     <header class="top-dashboard">
@@ -343,4 +356,4 @@
         window.onload = initChart;
     </script>
 </body>
-    </html>
+</html>
